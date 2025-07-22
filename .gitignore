@@ -1,0 +1,22 @@
+# Virtual env
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Env & secrets
+.env
+*.env
+
+# VSCode & JetBrains
+.vscode/
+.idea/
+
+# Testing
+.pytest_cache/
+.mypy_cache/
+
+# Alembic & DB
+migrations/
+*.db
