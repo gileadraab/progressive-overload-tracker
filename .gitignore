@@ -18,5 +18,7 @@ __pycache__/
 .mypy_cache/
 
 # Alembic & DB
-migrations/
+__pycache__/
+migrations/__pycache__/
+
 *.db
