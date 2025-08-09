@@ -6,7 +6,7 @@ from sqlalchemy import pool
 from alembic import context
 
 from src.config import settings
-from src.models import Base, Exercise, Session, Template, Set, ExerciseSession, UnitEnum
+from src.models  import Base, Exercise, Session, Template, Set, ExerciseSession, UnitEnum, EquipmentEnum, CategoryEnum
 
 
 # this is the Alembic Config object, which provides
