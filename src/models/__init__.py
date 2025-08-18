@@ -5,6 +5,7 @@ from src.models.exercise_session import ExerciseSession
 from src.models.session import Session
 from src.models.set import Set
 from src.models.template import Template
+from src.models.user import User
 
 __all__ = [
     "Base",
@@ -14,4 +15,7 @@ __all__ = [
     "ExerciseSession",
     "Set",
     "UnitEnum",
+    "EquipmentEnum",
+    "CategoryEnum",
+    "User"
 ]
