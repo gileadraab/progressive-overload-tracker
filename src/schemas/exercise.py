@@ -1,29 +1,19 @@
-from pydantic import BaseModel, Field, HttpUrl
 from typing import Optional
-from pydantic.config import ConfigDict
+from pydantic import BaseModel, Field, HttpUrl, ConfigDict
+from src.models.enums import EquipmentEnum, CategoryEnum
 
 
 class ExerciseBase(BaseModel):
-    name_en: str = Field(
+    name: str = Field(
         ...,
         json_schema_extra={"example": "Bench Press"}
     )
-    name_pt: str = Field(
-        ...,
-        json_schema_extra={"example": "Supino Reto"}
-    )
-    category: str = Field(
-        ...,
-        json_schema_extra={"example": "Chest"}
-    )
+    category: CategoryEnum
     subcategory: Optional[str] = Field(
         None,
         json_schema_extra={"example": "Upper Chest"}
     )
-    equipment: Optional[str] = Field(
-        None,
-        json_schema_extra={"example": "Barbell"}
-    )
+    equipment: Optional[EquipmentEnum] = None
     image_url: Optional[HttpUrl] = Field(
         None,
         json_schema_extra={"example": "https://example.com/images/bench_press.jpg"}
@@ -35,11 +25,10 @@ class ExerciseCreate(ExerciseBase):
 
 
 class ExerciseUpdate(BaseModel):
-    name_en: Optional[str] = None
-    name_pt: Optional[str] = None
-    category: Optional[str] = None
+    name: Optional[str] = None
+    category: Optional[CategoryEnum] = None
     subcategory: Optional[str] = None
-    equipment: Optional[str] = None
+    equipment: Optional[EquipmentEnum] = None
     image_url: Optional[HttpUrl] = None
 
 
