@@ -4,7 +4,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 
 from src.models.exercise import Exercise
-from src.schemas.exercise import ExerciseCreate, ExerciseUpdate, ExerciseResponse
+from src.schemas.exercise import ExerciseCreate, ExerciseUpdate
 
 
 def get_exercises(db: Session, skip: int = 0, limit: int = 100) -> List[Exercise]:

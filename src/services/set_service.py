@@ -4,7 +4,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 
 from src.models.set import Set as SetModel
-from src.schemas.set import SetCreate, SetUpdate, SetResponse
+from src.schemas.set import SetCreate, SetUpdate
 
 
 def get_sets(db: DbSession, skip: int = 0, limit: int = 100) -> List[SetModel]:

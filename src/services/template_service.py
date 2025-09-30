@@ -6,7 +6,7 @@ from sqlalchemy import select
 from src.models.template import Template as TemplateModel
 from src.models.exercise import Exercise
 from src.models.exercise_session import ExerciseSession
-from src.schemas.template import TemplateCreate, TemplateUpdate, TemplateResponse
+from src.schemas.template import TemplateCreate, TemplateUpdate
 
 
 def get_templates(db: DbSession, skip: int = 0, limit: int = 100) -> List[TemplateModel]:

@@ -6,7 +6,7 @@ from sqlalchemy import select
 from src.models.session import Session as SessionModel
 from src.models.exercise_session import ExerciseSession
 from src.models.set import Set as SetModel
-from src.schemas.session import SessionCreate, SessionUpdate, SessionResponse
+from src.schemas.session import SessionCreate, SessionUpdate
 
 
 def get_sessions(db: DbSession, skip: int = 0, limit: int = 100) -> List[SessionModel]:

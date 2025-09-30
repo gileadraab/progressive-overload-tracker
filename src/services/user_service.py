@@ -4,7 +4,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 
 from src.models.user import User
-from src.schemas.user import UserCreate, UserUpdate, UserResponse
+from src.schemas.user import UserCreate, UserUpdate
 
 
 def get_users(db: DbSession, skip: int = 0, limit: int = 100) -> List[User]:
