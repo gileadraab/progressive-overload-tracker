@@ -1,5 +1,11 @@
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 from pydantic import BaseModel, Field, ConfigDict
+
+if TYPE_CHECKING:
+    from src.schemas.exercise import ExerciseResponse
+    from src.schemas.session import SessionResponse
+    from src.schemas.template import TemplateResponse
+    from src.schemas.set import SetResponse
 
 
 class ExerciseSessionBase(BaseModel):
@@ -11,7 +17,7 @@ class ExerciseSessionBase(BaseModel):
 
 class ExerciseSessionCreate(ExerciseSessionBase):
     """Schema for creating a new exercise session."""
-    pass
+    sets: List["SetCreate"] = Field(default_factory=list, description="Sets for this exercise")
 
 
 class ExerciseSessionUpdate(BaseModel):
@@ -30,14 +36,13 @@ class ExerciseSessionResponse(ExerciseSessionBase):
 
 class ExerciseSessionWithDetails(ExerciseSessionResponse):
     """Schema for exercise session with full details included."""
-    from src.schemas.exercise import ExerciseResponse
-    from src.schemas.session import SessionResponse
-    from src.schemas.template import TemplateResponse
-    from src.schemas.set import SetResponse
-
-    exercise: Optional[ExerciseResponse] = None
-    session: Optional[SessionResponse] = None
-    template: Optional[TemplateResponse] = None
-    sets: List[SetResponse] = Field(default_factory=list)
+    exercise: Optional["ExerciseResponse"] = None
+    session: Optional["SessionResponse"] = None
+    template: Optional["TemplateResponse"] = None
+    sets: List["SetResponse"] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# Import for SetCreate forward reference
+from src.schemas.set import SetCreate  # noqa: E402
