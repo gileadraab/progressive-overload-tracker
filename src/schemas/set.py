@@ -1,6 +1,9 @@
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from pydantic import BaseModel, Field, ConfigDict
 from src.models.enums import UnitEnum
+
+if TYPE_CHECKING:
+    from src.schemas.exercise_session import ExerciseSessionResponse
 
 
 class SetBase(BaseModel):
@@ -8,12 +11,11 @@ class SetBase(BaseModel):
     weight: float = Field(..., gt=0, description="Weight used for the set")
     reps: int = Field(..., gt=0, description="Number of repetitions")
     unit: UnitEnum = Field(..., description="Unit of measurement (kg or stacks)")
-    exercise_session_id: int = Field(..., description="ID of the exercise session this set belongs to")
 
 
 class SetCreate(SetBase):
     """Schema for creating a new set."""
-    pass
+    exercise_session_id: Optional[int] = Field(None, description="ID of the exercise session (optional for nested creation)")
 
 
 class SetUpdate(BaseModel):
@@ -27,14 +29,13 @@ class SetUpdate(BaseModel):
 class SetResponse(SetBase):
     """Schema for set responses."""
     id: int
+    exercise_session_id: int
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class SetWithExerciseSession(SetResponse):
     """Schema for set with exercise session details included."""
-    from src.schemas.exercise_session import ExerciseSessionResponse
-
-    exercise_session: ExerciseSessionResponse
+    exercise_session: Optional["ExerciseSessionResponse"] = None
 
     model_config = ConfigDict(from_attributes=True)
