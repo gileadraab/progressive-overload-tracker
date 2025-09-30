@@ -1,5 +1,8 @@
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 from pydantic import BaseModel, Field, ConfigDict
+
+if TYPE_CHECKING:
+    from src.schemas.session import SessionResponse
 
 
 class UserBase(BaseModel):
@@ -28,7 +31,6 @@ class UserResponse(UserBase):
 
 class UserWithSessions(UserResponse):
     """Schema for user with sessions included."""
-    from src.schemas.session import SessionResponse
-    sessions: List[SessionResponse] = Field(default_factory=list)
+    sessions: List["SessionResponse"] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
