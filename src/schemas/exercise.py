@@ -32,7 +32,11 @@ class ExerciseUpdate(BaseModel):
     image_url: Optional[HttpUrl] = None
 
 
-class ExerciseRead(ExerciseBase):
+class ExerciseResponse(ExerciseBase):
     id: int
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# Alias for backward compatibility
+ExerciseRead = ExerciseResponse
