@@ -1,7 +1,7 @@
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import select, String
 
 from src.models.exercise import Exercise
 from src.schemas.exercise import ExerciseCreate, ExerciseUpdate
@@ -38,7 +38,7 @@ def search_exercises(query: str, db: Session) -> List[Exercise]:
     result = db.execute(
         select(Exercise).where(
             (Exercise.name.ilike(search))
-            | (Exercise.category.cast(db.bind.dialect.name).ilike(search))
+            | (Exercise.category.cast(String).ilike(search))
             | (Exercise.subcategory.ilike(search))
         )
     )
