@@ -20,8 +20,3 @@ class Session(Base):
         back_populates="session",
         cascade="all, delete-orphan"
     )
-    sets = relationship(
-        "Set",
-        back_populates="session",
-        cascade="all, delete-orphan"
-    )
