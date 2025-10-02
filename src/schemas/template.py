@@ -35,3 +35,10 @@ class TemplateWithExerciseSessions(TemplateResponse):
     exercise_sessions: List["ExerciseSessionResponse"] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# Import for forward reference resolution
+from src.schemas.exercise_session import ExerciseSessionResponse  # noqa: E402
+
+# Rebuild models to resolve forward references
+TemplateWithExerciseSessions.model_rebuild()
