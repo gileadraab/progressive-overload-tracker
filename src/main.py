@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from src.routers import exercises, users
+from src.routers import exercises, users, sessions, templates
 
 app = FastAPI(
     title="Progressive Overload Tracker API",
@@ -10,6 +10,8 @@ app = FastAPI(
 # Include routers
 app.include_router(exercises.router)
 app.include_router(users.router)
+app.include_router(sessions.router)
+app.include_router(templates.router)
 
 @app.get("/")
 async def root():
