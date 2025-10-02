@@ -42,4 +42,8 @@ class SessionWithDetails(SessionResponse):
 
 
 # Import for forward reference resolution
-from src.schemas.exercise_session import ExerciseSessionCreate  # noqa: E402
+from src.schemas.exercise_session import ExerciseSessionCreate, ExerciseSessionResponse  # noqa: E402
+from src.schemas.set import SetResponse  # noqa: E402
+
+# Rebuild models to resolve forward references
+SessionWithDetails.model_rebuild()
