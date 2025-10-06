@@ -5,25 +5,40 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
+# Import Base first
 from src.database.database import Base, get_db
-from src.main import app
-from src.models import User, Exercise, Session as WorkoutSession, Template, ExerciseSession, Set
+
+# Import all models to ensure they are registered with Base.metadata
+from src.models.user import User
+from src.models.exercise import Exercise
+from src.models.session import Session as WorkoutSession
+from src.models.template import Template
+from src.models.exercise_session import ExerciseSession
+from src.models.set import Set
 from src.models.enums import CategoryEnum, EquipmentEnum, UnitEnum
 
+# Import app after models
+from src.main import app
 
-# Test database URL (SQLite in-memory)
+
+# Test database URL (SQLite in-memory with shared cache)
 TEST_DATABASE_URL = "sqlite:///:memory:"
 
 
 @pytest.fixture(scope="function")
 def test_engine():
-    """Create a test database engine."""
+    """Create a test database engine with pooling to share in-memory database."""
+    from sqlalchemy.pool import StaticPool
+
     engine = create_engine(
         TEST_DATABASE_URL,
-        connect_args={"check_same_thread": False}  # Required for SQLite
+        connect_args={"check_same_thread": False},  # Required for SQLite
+        poolclass=StaticPool,  # Share the same connection for in-memory SQLite
+        echo=False  # Set to True to debug SQL
     )
     # Create all tables
     Base.metadata.create_all(bind=engine)
+
     yield engine
     # Clean up
     Base.metadata.drop_all(bind=engine)
