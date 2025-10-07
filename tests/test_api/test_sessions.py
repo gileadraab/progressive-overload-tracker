@@ -92,14 +92,12 @@ class TestSessionsAPI:
         data = response.json()
         assert len(data["exercise_sessions"]) == 2
 
-    @pytest.mark.skip(reason="FK validation not yet implemented")
     def test_create_session_invalid_user(self, client: TestClient):
         """Test creating session with non-existent user."""
         session_data = {"user_id": 99999, "exercise_sessions": []}
         response = client.post("/sessions/", json=session_data)
         assert response.status_code == 404
 
-    @pytest.mark.skip(reason="FK validation not yet implemented")
     def test_create_session_invalid_exercise(self, client: TestClient):
         """Test creating session with non-existent exercise."""
         # Create user
