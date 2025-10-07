@@ -93,3 +93,11 @@ __all__ = [
     "ExerciseUpdate",
     "ExerciseResponse",
 ]
+
+# Rebuild models to resolve forward references
+# This must happen after all schemas are imported
+SessionWithDetails.model_rebuild()
+TemplateWithExerciseSessions.model_rebuild()
+ExerciseSessionWithDetails.model_rebuild()
+UserWithSessions.model_rebuild()
+SetWithExerciseSession.model_rebuild()

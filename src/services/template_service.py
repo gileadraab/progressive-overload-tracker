@@ -74,7 +74,7 @@ def create_template(template_data: TemplateCreate, db: DbSession) -> TemplateMod
     Create a new template with associated exercises.
 
     Args:
-        template_data: The template data, including a list of exercise IDs.
+        template_data: The template data, including exercise sessions.
         db: The database session.
 
     Raises:
@@ -84,25 +84,17 @@ def create_template(template_data: TemplateCreate, db: DbSession) -> TemplateMod
         The newly created template.
     """
     template_dict = template_data.model_dump()
-    exercise_ids = template_dict.pop('exercise_ids', [])
+    exercise_sessions_data = template_dict.pop('exercise_sessions', [])
 
-    db_template = TemplateModel(**template_dict)
+    db_template = TemplateModel(name=template_dict['name'], user_id=template_dict['user_id'])
 
-    if exercise_ids:
-        unique_exercise_ids = list(set(exercise_ids))
-        exercises = db.execute(
-            select(Exercise).where(Exercise.id.in_(unique_exercise_ids))
-        ).scalars().all()
-
-        if len(exercises) != len(unique_exercise_ids):
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="One or more exercises not found"
-            )
-
-        for exercise in exercises:
-            exercise_session = ExerciseSession(exercise_id=exercise.id)
-            db_template.exercise_sessions.append(exercise_session)
+    # Create exercise sessions for the template
+    for es_data in exercise_sessions_data:
+        db_exercise_session = ExerciseSession(
+            exercise_id=es_data['exercise_id'],
+            template_id=None  # Will be set when added to template
+        )
+        db_template.exercise_sessions.append(db_exercise_session)
 
     db.add(db_template)
     db.commit()

@@ -27,7 +27,6 @@ class TestTemplatesAPI:
         assert "id" in data
         assert data["exercise_sessions"] == []
 
-    @pytest.mark.skip(reason="Nested exercise_sessions not populated correctly")
     def test_create_template_with_exercises(self, client: TestClient):
         """Test creating a template with exercises."""
         # Create user
@@ -308,7 +307,6 @@ class TestTemplatesAPI:
         data = response.json()
         assert len(data) <= 3
 
-    @pytest.mark.skip(reason="Nested exercise_sessions not populated correctly")
     def test_template_with_multiple_exercises(self, client: TestClient):
         """Test creating template with many exercises."""
         # Create user

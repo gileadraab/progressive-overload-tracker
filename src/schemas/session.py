@@ -3,7 +3,7 @@ from typing import Optional, List, TYPE_CHECKING
 from pydantic import BaseModel, Field, ConfigDict
 
 if TYPE_CHECKING:
-    from src.schemas.exercise_session import ExerciseSessionResponse, ExerciseSessionCreate
+    from src.schemas.exercise_session import ExerciseSessionResponse, ExerciseSessionCreate, ExerciseSessionWithDetails
     from src.schemas.set import SetResponse
 
 
@@ -35,15 +35,12 @@ class SessionResponse(SessionBase):
 
 class SessionWithDetails(SessionResponse):
     """Schema for session with exercise sessions and sets included."""
-    exercise_sessions: List["ExerciseSessionResponse"] = Field(default_factory=list)
+    exercise_sessions: List["ExerciseSessionWithDetails"] = Field(default_factory=list)
     sets: List["SetResponse"] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
 
 
 # Import for forward reference resolution
-from src.schemas.exercise_session import ExerciseSessionCreate, ExerciseSessionResponse  # noqa: E402
+from src.schemas.exercise_session import ExerciseSessionCreate, ExerciseSessionResponse, ExerciseSessionWithDetails  # noqa: E402
 from src.schemas.set import SetResponse  # noqa: E402
-
-# Rebuild models to resolve forward references
-SessionWithDetails.model_rebuild()
