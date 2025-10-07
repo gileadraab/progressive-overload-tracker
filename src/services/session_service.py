@@ -6,6 +6,8 @@ from sqlalchemy import select
 from src.models.session import Session as SessionModel
 from src.models.exercise_session import ExerciseSession
 from src.models.set import Set as SetModel
+from src.models.user import User
+from src.models.exercise import Exercise
 from src.schemas.session import SessionCreate, SessionUpdate
 
 
@@ -79,13 +81,33 @@ def create_session(session_data: SessionCreate, db: DbSession) -> SessionModel:
         session_data: The session data, including nested exercise sessions and sets.
         db: The database session.
 
+    Raises:
+        HTTPException: If user_id or any exercise_id does not exist.
+
     Returns:
         The newly created session.
     """
     session_dict = session_data.model_dump()
 
+    # Validate user exists
+    user = db.get(User, session_dict['user_id'])
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with id {session_dict['user_id']} not found"
+        )
+
     # Extract nested exercise_sessions if present
     exercise_sessions_data = session_dict.pop('exercise_sessions', [])
+
+    # Validate all exercises exist
+    for es_data in exercise_sessions_data:
+        exercise = db.get(Exercise, es_data['exercise_id'])
+        if not exercise:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Exercise with id {es_data['exercise_id']} not found"
+            )
 
     # Create the session
     db_session = SessionModel(**session_dict)

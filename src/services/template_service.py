@@ -6,6 +6,7 @@ from sqlalchemy import select
 from src.models.template import Template as TemplateModel
 from src.models.exercise import Exercise
 from src.models.exercise_session import ExerciseSession
+from src.models.user import User
 from src.schemas.template import TemplateCreate, TemplateUpdate
 
 
@@ -78,13 +79,31 @@ def create_template(template_data: TemplateCreate, db: DbSession) -> TemplateMod
         db: The database session.
 
     Raises:
-        HTTPException: If any of the provided exercise IDs are not found.
+        HTTPException: If user_id or any exercise_id does not exist.
 
     Returns:
         The newly created template.
     """
     template_dict = template_data.model_dump()
+
+    # Validate user exists
+    user = db.get(User, template_dict['user_id'])
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with id {template_dict['user_id']} not found"
+        )
+
     exercise_sessions_data = template_dict.pop('exercise_sessions', [])
+
+    # Validate all exercises exist
+    for es_data in exercise_sessions_data:
+        exercise = db.get(Exercise, es_data['exercise_id'])
+        if not exercise:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Exercise with id {es_data['exercise_id']} not found"
+            )
 
     db_template = TemplateModel(name=template_dict['name'], user_id=template_dict['user_id'])
 

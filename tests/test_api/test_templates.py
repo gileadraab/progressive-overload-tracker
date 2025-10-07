@@ -58,7 +58,6 @@ class TestTemplatesAPI:
         assert data["exercise_sessions"][0]["exercise"]["id"] == exercise1["id"]
         assert data["exercise_sessions"][1]["exercise"]["id"] == exercise2["id"]
 
-    @pytest.mark.skip(reason="FK validation not yet implemented")
     def test_create_template_invalid_user(self, client: TestClient):
         """Test creating template with non-existent user."""
         template_data = {
@@ -69,7 +68,6 @@ class TestTemplatesAPI:
         response = client.post("/templates/", json=template_data)
         assert response.status_code == 404
 
-    @pytest.mark.skip(reason="FK validation not yet implemented")
     def test_create_template_invalid_exercise(self, client: TestClient):
         """Test creating template with non-existent exercise."""
         # Create user
