@@ -44,5 +44,5 @@ class ExerciseSessionWithDetails(ExerciseSessionResponse):
     model_config = ConfigDict(from_attributes=True)
 
 
-# Import for SetCreate forward reference
+# Import for forward reference resolution
 from src.schemas.set import SetCreate  # noqa: E402

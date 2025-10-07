@@ -25,7 +25,6 @@ class TestSessionsAPI:
         assert "id" in data
         assert data["exercise_sessions"] == []
 
-    @pytest.mark.skip(reason="Nested exercise details not included in response")
     def test_create_session_with_exercises(self, client: TestClient):
         """Test creating a session with exercises and sets."""
         # Create user
@@ -93,14 +92,12 @@ class TestSessionsAPI:
         data = response.json()
         assert len(data["exercise_sessions"]) == 2
 
-    @pytest.mark.skip(reason="FK validation not yet implemented")
     def test_create_session_invalid_user(self, client: TestClient):
         """Test creating session with non-existent user."""
         session_data = {"user_id": 99999, "exercise_sessions": []}
         response = client.post("/sessions/", json=session_data)
         assert response.status_code == 404
 
-    @pytest.mark.skip(reason="FK validation not yet implemented")
     def test_create_session_invalid_exercise(self, client: TestClient):
         """Test creating session with non-existent exercise."""
         # Create user
@@ -273,7 +270,6 @@ class TestSessionsAPI:
         data = response.json()
         assert len(data) <= 3
 
-    @pytest.mark.skip(reason="Nested exercise details not included in response")
     def test_create_session_with_stacks_unit(self, client: TestClient):
         """Test creating session with sets using 'stacks' unit."""
         # Create user and exercise

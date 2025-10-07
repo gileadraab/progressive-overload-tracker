@@ -6,6 +6,7 @@ from sqlalchemy import select
 from src.models.template import Template as TemplateModel
 from src.models.exercise import Exercise
 from src.models.exercise_session import ExerciseSession
+from src.models.user import User
 from src.schemas.template import TemplateCreate, TemplateUpdate
 
 
@@ -74,35 +75,45 @@ def create_template(template_data: TemplateCreate, db: DbSession) -> TemplateMod
     Create a new template with associated exercises.
 
     Args:
-        template_data: The template data, including a list of exercise IDs.
+        template_data: The template data, including exercise sessions.
         db: The database session.
 
     Raises:
-        HTTPException: If any of the provided exercise IDs are not found.
+        HTTPException: If user_id or any exercise_id does not exist.
 
     Returns:
         The newly created template.
     """
     template_dict = template_data.model_dump()
-    exercise_ids = template_dict.pop('exercise_ids', [])
 
-    db_template = TemplateModel(**template_dict)
+    # Validate user exists
+    user = db.get(User, template_dict['user_id'])
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with id {template_dict['user_id']} not found"
+        )
 
-    if exercise_ids:
-        unique_exercise_ids = list(set(exercise_ids))
-        exercises = db.execute(
-            select(Exercise).where(Exercise.id.in_(unique_exercise_ids))
-        ).scalars().all()
+    exercise_sessions_data = template_dict.pop('exercise_sessions', [])
 
-        if len(exercises) != len(unique_exercise_ids):
+    # Validate all exercises exist
+    for es_data in exercise_sessions_data:
+        exercise = db.get(Exercise, es_data['exercise_id'])
+        if not exercise:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="One or more exercises not found"
+                detail=f"Exercise with id {es_data['exercise_id']} not found"
             )
 
-        for exercise in exercises:
-            exercise_session = ExerciseSession(exercise_id=exercise.id)
-            db_template.exercise_sessions.append(exercise_session)
+    db_template = TemplateModel(name=template_dict['name'], user_id=template_dict['user_id'])
+
+    # Create exercise sessions for the template
+    for es_data in exercise_sessions_data:
+        db_exercise_session = ExerciseSession(
+            exercise_id=es_data['exercise_id'],
+            template_id=None  # Will be set when added to template
+        )
+        db_template.exercise_sessions.append(db_exercise_session)
 
     db.add(db_template)
     db.commit()

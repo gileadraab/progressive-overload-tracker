@@ -2,7 +2,7 @@ from typing import Optional, List, TYPE_CHECKING
 from pydantic import BaseModel, Field, ConfigDict
 
 if TYPE_CHECKING:
-    from src.schemas.exercise_session import ExerciseSessionResponse
+    from src.schemas.exercise_session import ExerciseSessionResponse, ExerciseSessionWithDetails, ExerciseSessionCreate
 
 
 class TemplateBase(BaseModel):
@@ -14,7 +14,7 @@ class TemplateBase(BaseModel):
 class TemplateCreate(TemplateBase):
     """Schema for creating a new template."""
     user_id: int = Field(..., description="Required user ID for template creation")
-    exercise_ids: List[int] = Field(default_factory=list, description="List of exercise IDs to include")
+    exercise_sessions: List["ExerciseSessionCreate"] = Field(default_factory=list, description="Exercise sessions for this template")
 
 
 class TemplateUpdate(BaseModel):
@@ -32,13 +32,10 @@ class TemplateResponse(TemplateBase):
 
 class TemplateWithExerciseSessions(TemplateResponse):
     """Schema for template with exercise sessions included."""
-    exercise_sessions: List["ExerciseSessionResponse"] = Field(default_factory=list)
+    exercise_sessions: List["ExerciseSessionWithDetails"] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
 
 
 # Import for forward reference resolution
-from src.schemas.exercise_session import ExerciseSessionResponse  # noqa: E402
-
-# Rebuild models to resolve forward references
-TemplateWithExerciseSessions.model_rebuild()
+from src.schemas.exercise_session import ExerciseSessionResponse, ExerciseSessionWithDetails, ExerciseSessionCreate  # noqa: E402

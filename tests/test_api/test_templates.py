@@ -27,7 +27,6 @@ class TestTemplatesAPI:
         assert "id" in data
         assert data["exercise_sessions"] == []
 
-    @pytest.mark.skip(reason="Nested exercise_sessions not populated correctly")
     def test_create_template_with_exercises(self, client: TestClient):
         """Test creating a template with exercises."""
         # Create user
@@ -59,7 +58,6 @@ class TestTemplatesAPI:
         assert data["exercise_sessions"][0]["exercise"]["id"] == exercise1["id"]
         assert data["exercise_sessions"][1]["exercise"]["id"] == exercise2["id"]
 
-    @pytest.mark.skip(reason="FK validation not yet implemented")
     def test_create_template_invalid_user(self, client: TestClient):
         """Test creating template with non-existent user."""
         template_data = {
@@ -70,7 +68,6 @@ class TestTemplatesAPI:
         response = client.post("/templates/", json=template_data)
         assert response.status_code == 404
 
-    @pytest.mark.skip(reason="FK validation not yet implemented")
     def test_create_template_invalid_exercise(self, client: TestClient):
         """Test creating template with non-existent exercise."""
         # Create user
@@ -308,7 +305,6 @@ class TestTemplatesAPI:
         data = response.json()
         assert len(data) <= 3
 
-    @pytest.mark.skip(reason="Nested exercise_sessions not populated correctly")
     def test_template_with_multiple_exercises(self, client: TestClient):
         """Test creating template with many exercises."""
         # Create user
