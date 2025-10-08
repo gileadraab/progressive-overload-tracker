@@ -231,7 +231,6 @@ class TestTemplatesAPI:
         response = client.delete("/templates/99999")
         assert response.status_code == 404
 
-    @pytest.mark.skip(reason="Query parameter filtering not yet implemented")
     def test_filter_templates_by_user(self, client: TestClient):
         """Test filtering templates by user_id."""
         # Create two users
