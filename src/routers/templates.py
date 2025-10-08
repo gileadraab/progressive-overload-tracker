@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
@@ -13,6 +13,7 @@ router = APIRouter(prefix="/templates", tags=["templates"])
 def list_templates(
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of records to return"),
+    user_id: Optional[int] = Query(None, description="Filter by user ID"),
     db: Session = Depends(get_db),
 ):
     """
@@ -20,8 +21,9 @@ def list_templates(
 
     - **skip**: Number of records to skip (for pagination)
     - **limit**: Maximum number of records to return
+    - **user_id**: Optional filter to get templates for a specific user
     """
-    return template_service.get_templates(db, skip=skip, limit=limit)
+    return template_service.get_templates(db, skip=skip, limit=limit, user_id=user_id)
 
 
 @router.get("/{template_id}", response_model=TemplateWithExerciseSessions)
