@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session as DbSession, joinedload
 from fastapi import HTTPException, status
 from sqlalchemy import select
@@ -11,29 +11,35 @@ from src.models.user import User
 from src.schemas.template import TemplateCreate, TemplateUpdate
 
 
-def get_templates(db: DbSession, skip: int = 0, limit: int = 100) -> List[TemplateModel]:
+def get_templates(
+    db: DbSession,
+    skip: int = 0,
+    limit: int = 100,
+    user_id: Optional[int] = None,
+) -> List[TemplateModel]:
     """
-    Get all workout templates from the database.
+    Get all workout templates from the database with optional filtering.
 
     Args:
         db: The database session.
         skip: Number of records to skip (for pagination).
         limit: Maximum number of records to return.
+        user_id: Optional user_id filter to get templates for a specific user.
 
     Returns:
         A list of all templates.
     """
-    result = db.execute(
-        select(TemplateModel)
-        .options(
-            joinedload(TemplateModel.exercise_sessions).joinedload(
-                ExerciseSession.exercise
-            ),
-            joinedload(TemplateModel.user)
-        )
-        .offset(skip)
-        .limit(limit)
+    query = select(TemplateModel).options(
+        joinedload(TemplateModel.exercise_sessions).joinedload(
+            ExerciseSession.exercise
+        ),
+        joinedload(TemplateModel.user)
     )
+
+    if user_id:
+        query = query.where(TemplateModel.user_id == user_id)
+
+    result = db.execute(query.offset(skip).limit(limit))
     return result.scalars().unique().all()
 
 

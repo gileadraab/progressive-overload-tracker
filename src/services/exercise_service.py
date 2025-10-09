@@ -4,22 +4,38 @@ from fastapi import HTTPException, status
 from sqlalchemy import select, String
 
 from src.models.exercise import Exercise
+from src.models.enums import CategoryEnum, EquipmentEnum
 from src.schemas.exercise import ExerciseCreate, ExerciseUpdate
 
 
-def get_exercises(db: Session, skip: int = 0, limit: int = 100) -> List[Exercise]:
+def get_exercises(
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    category: Optional[CategoryEnum] = None,
+    equipment: Optional[EquipmentEnum] = None,
+) -> List[Exercise]:
     """
-    Get all exercises from the database.
+    Get all exercises from the database with optional filtering.
 
     Args:
         db: The database session.
         skip: Number of records to skip (for pagination).
         limit: Maximum number of records to return.
+        category: Optional category filter.
+        equipment: Optional equipment filter.
 
     Returns:
         A list of exercises.
     """
-    result = db.execute(select(Exercise).offset(skip).limit(limit))
+    query = select(Exercise)
+
+    if category:
+        query = query.where(Exercise.category == category)
+    if equipment:
+        query = query.where(Exercise.equipment == equipment)
+
+    result = db.execute(query.offset(skip).limit(limit))
     return result.scalars().all()
 
 

@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from src.database.database import get_db
+from src.models.enums import CategoryEnum, EquipmentEnum
 from src.schemas.exercise import ExerciseCreate, ExerciseUpdate, ExerciseResponse
 from src.services import exercise_service
 
@@ -14,6 +15,8 @@ def list_exercises(
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of records to return"),
     search: Optional[str] = Query(None, description="Search term for name, category, or subcategory"),
+    category: Optional[CategoryEnum] = Query(None, description="Filter by category"),
+    equipment: Optional[EquipmentEnum] = Query(None, description="Filter by equipment type"),
     db: Session = Depends(get_db),
 ):
     """
@@ -22,10 +25,12 @@ def list_exercises(
     - **skip**: Number of records to skip (for pagination)
     - **limit**: Maximum number of records to return
     - **search**: Optional search term to filter exercises
+    - **category**: Optional category filter (chest, back, legs, shoulders, arms, core)
+    - **equipment**: Optional equipment filter (machine, dumbbell, barbell, bodyweight, kettlebell, resistance_band)
     """
     if search:
         return exercise_service.search_exercises(search, db)
-    return exercise_service.get_exercises(db, skip=skip, limit=limit)
+    return exercise_service.get_exercises(db, skip=skip, limit=limit, category=category, equipment=equipment)
 
 
 @router.get("/{exercise_id}", response_model=ExerciseResponse)

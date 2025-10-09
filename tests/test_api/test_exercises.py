@@ -134,7 +134,6 @@ class TestExercisesAPI:
         assert len(data) >= 3
         assert all("Curl" in ex["name"] for ex in data)
 
-    @pytest.mark.skip(reason="Query parameter filtering not yet implemented")
     def test_search_exercises_by_category(self, client: TestClient):
         """Test searching exercises by category."""
         # Create exercises
@@ -153,7 +152,6 @@ class TestExercisesAPI:
         assert len(data) >= 2
         assert all(ex["category"] == "shoulders" for ex in data)
 
-    @pytest.mark.skip(reason="Query parameter filtering not yet implemented")
     def test_search_exercises_by_equipment(self, client: TestClient):
         """Test searching exercises by equipment."""
         # Create exercises
@@ -172,7 +170,6 @@ class TestExercisesAPI:
         assert len(data) >= 2
         assert all(ex["equipment"] == "kettlebell" for ex in data)
 
-    @pytest.mark.skip(reason="Query parameter filtering not yet implemented")
     def test_search_exercises_combined_filters(self, client: TestClient):
         """Test searching exercises with multiple filters."""
         # Create exercises

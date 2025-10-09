@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from sqlalchemy.orm import Session as DbSession, joinedload
 from fastapi import HTTPException, status
 from sqlalchemy import select
@@ -11,30 +11,36 @@ from src.models.exercise import Exercise
 from src.schemas.session import SessionCreate, SessionUpdate
 
 
-def get_sessions(db: DbSession, skip: int = 0, limit: int = 100) -> List[SessionModel]:
+def get_sessions(
+    db: DbSession,
+    skip: int = 0,
+    limit: int = 100,
+    user_id: Optional[int] = None,
+) -> List[SessionModel]:
     """
-    Get all workout sessions from the database.
+    Get all workout sessions from the database with optional filtering.
 
     Args:
         db: The database session.
         skip: Number of records to skip (for pagination).
         limit: Maximum number of records to return.
+        user_id: Optional user_id filter to get sessions for a specific user.
 
     Returns:
         A list of all sessions.
     """
-    result = db.execute(
-        select(SessionModel)
-        .options(
-            joinedload(SessionModel.exercise_sessions).options(
-                joinedload(ExerciseSession.exercise),
-                joinedload(ExerciseSession.sets)
-            ),
-            joinedload(SessionModel.user)
-        )
-        .offset(skip)
-        .limit(limit)
+    query = select(SessionModel).options(
+        joinedload(SessionModel.exercise_sessions).options(
+            joinedload(ExerciseSession.exercise),
+            joinedload(ExerciseSession.sets)
+        ),
+        joinedload(SessionModel.user)
     )
+
+    if user_id:
+        query = query.where(SessionModel.user_id == user_id)
+
+    result = db.execute(query.offset(skip).limit(limit))
     return result.scalars().unique().all()
 
 

@@ -235,7 +235,6 @@ class TestSessionsAPI:
         get_response = client.get(f"/sessions/{session_id}")
         assert get_response.status_code == 404
 
-    @pytest.mark.skip(reason="Query parameter filtering not yet implemented")
     def test_filter_sessions_by_user(self, client: TestClient):
         """Test filtering sessions by user_id."""
         # Create two users
