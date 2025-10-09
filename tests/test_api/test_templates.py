@@ -162,7 +162,6 @@ class TestTemplatesAPI:
         data = response.json()
         assert data["name"] == "New Template Name"
 
-    @pytest.mark.skip(reason="Template update with exercise_sessions not implemented")
     def test_update_template_add_exercises(self, client: TestClient):
         """Test updating a template to add exercises."""
         # Create user
@@ -345,3 +344,200 @@ class TestTemplatesAPI:
         response = client.post("/templates/", json=template_data)
         # Should fail validation
         assert response.status_code == 422
+
+    # Template Instantiation Workflow Tests
+
+    def test_create_session_from_template(self, client: TestClient):
+        """Test getting session structure from a template."""
+        # Create user
+        user_response = client.post("/users/", json={"username": "instantiateuser"})
+        user_id = user_response.json()["id"]
+
+        # Create exercises
+        exercise1 = client.post(
+            "/exercises/", json={"name": "Deadlift", "category": "back", "equipment": "barbell"}
+        ).json()
+        exercise2 = client.post(
+            "/exercises/", json={"name": "Row", "category": "back", "equipment": "dumbbell"}
+        ).json()
+
+        # Create template with exercises
+        template_data = {
+            "user_id": user_id,
+            "name": "Back Day Template",
+            "exercise_sessions": [
+                {"exercise_id": exercise1["id"]},
+                {"exercise_id": exercise2["id"]},
+            ],
+        }
+        template_response = client.post("/templates/", json=template_data)
+        template_id = template_response.json()["id"]
+
+        # Get session structure from template
+        response = client.get(f"/sessions/from-template/{template_id}?user_id={user_id}")
+        assert response.status_code == 200
+        data = response.json()
+
+        # Verify session structure
+        assert data["user_id"] == user_id
+        assert data["date"] is None  # Default
+        assert len(data["exercise_sessions"]) == 2
+        assert data["exercise_sessions"][0]["exercise_id"] == exercise1["id"]
+        assert data["exercise_sessions"][0]["sets"] == []  # Template has no sets
+        assert data["exercise_sessions"][1]["exercise_id"] == exercise2["id"]
+        assert data["exercise_sessions"][1]["sets"] == []
+
+    def test_create_session_from_template_invalid_template(self, client: TestClient):
+        """Test getting session from non-existent template."""
+        # Create user
+        user_response = client.post("/users/", json={"username": "badtemplateinstuser"})
+        user_id = user_response.json()["id"]
+
+        response = client.get(f"/sessions/from-template/99999?user_id={user_id}")
+        assert response.status_code == 404
+
+    def test_create_session_from_template_invalid_user(self, client: TestClient):
+        """Test getting session from template with invalid user."""
+        # Create user and template
+        user_response = client.post("/users/", json={"username": "templateowneruser"})
+        user_id = user_response.json()["id"]
+
+        template_response = client.post(
+            "/templates/",
+            json={"user_id": user_id, "name": "Test Template", "exercise_sessions": []},
+        )
+        template_id = template_response.json()["id"]
+
+        # Try with non-existent user
+        response = client.get(f"/sessions/from-template/{template_id}?user_id=99999")
+        assert response.status_code == 404
+
+    def test_create_template_from_session(self, client: TestClient):
+        """Test creating a template from an existing session."""
+        # Create user
+        user_response = client.post("/users/", json={"username": "sessiontotemplateuser"})
+        user_id = user_response.json()["id"]
+
+        # Create exercises
+        exercise1 = client.post(
+            "/exercises/", json={"name": "Overhead Press", "category": "shoulders", "equipment": "barbell"}
+        ).json()
+        exercise2 = client.post(
+            "/exercises/", json={"name": "Lateral Raise", "category": "shoulders", "equipment": "dumbbell"}
+        ).json()
+
+        # Create session with exercises and sets
+        session_data = {
+            "user_id": user_id,
+            "exercise_sessions": [
+                {
+                    "exercise_id": exercise1["id"],
+                    "sets": [
+                        {"weight": 60, "reps": 8, "unit": "kg"},
+                        {"weight": 60, "reps": 7, "unit": "kg"},
+                    ],
+                },
+                {
+                    "exercise_id": exercise2["id"],
+                    "sets": [
+                        {"weight": 15, "reps": 12, "unit": "kg"},
+                    ],
+                },
+            ],
+        }
+        session_response = client.post("/sessions/", json=session_data)
+        session_id = session_response.json()["id"]
+
+        # Create template from session
+        response = client.post(
+            f"/templates/from-session/{session_id}?name=My Shoulder Day&user_id={user_id}"
+        )
+        assert response.status_code == 201
+        data = response.json()
+
+        # Verify template
+        assert data["name"] == "My Shoulder Day"
+        assert data["user_id"] == user_id
+        assert len(data["exercise_sessions"]) == 2
+        # Templates should have exercises but not sets
+        assert data["exercise_sessions"][0]["exercise"]["id"] == exercise1["id"]
+        assert data["exercise_sessions"][1]["exercise"]["id"] == exercise2["id"]
+
+    def test_create_template_from_session_invalid_session(self, client: TestClient):
+        """Test creating template from non-existent session."""
+        # Create user
+        user_response = client.post("/users/", json={"username": "badsessiontemplateuser"})
+        user_id = user_response.json()["id"]
+
+        response = client.post(
+            f"/templates/from-session/99999?name=Bad Template&user_id={user_id}"
+        )
+        assert response.status_code == 404
+
+    def test_create_template_from_session_invalid_user(self, client: TestClient):
+        """Test creating template from session with invalid user."""
+        # Create user and session
+        user_response = client.post("/users/", json={"username": "sessionowneruser"})
+        user_id = user_response.json()["id"]
+
+        session_response = client.post(
+            "/sessions/",
+            json={"user_id": user_id, "exercise_sessions": []},
+        )
+        session_id = session_response.json()["id"]
+
+        # Try with non-existent user
+        response = client.post(
+            f"/templates/from-session/{session_id}?name=Test&user_id=99999"
+        )
+        assert response.status_code == 404
+
+    def test_full_template_workflow(self, client: TestClient):
+        """Test complete workflow: create template → instantiate → create session → save as template."""
+        # Create user
+        user_response = client.post("/users/", json={"username": "workflowuser"})
+        user_id = user_response.json()["id"]
+
+        # Create exercise
+        exercise = client.post(
+            "/exercises/", json={"name": "Bicep Curl", "category": "arms", "equipment": "dumbbell"}
+        ).json()
+
+        # 1. Create original template
+        template_response = client.post(
+            "/templates/",
+            json={
+                "user_id": user_id,
+                "name": "Arm Day Original",
+                "exercise_sessions": [{"exercise_id": exercise["id"]}],
+            },
+        )
+        original_template_id = template_response.json()["id"]
+
+        # 2. Get session structure from template
+        session_structure = client.get(
+            f"/sessions/from-template/{original_template_id}?user_id={user_id}"
+        ).json()
+
+        # 3. Add sets to session structure
+        session_structure["exercise_sessions"][0]["sets"] = [
+            {"weight": 20, "reps": 12, "unit": "kg"},
+            {"weight": 20, "reps": 10, "unit": "kg"},
+        ]
+
+        # 4. Create session
+        session_response = client.post("/sessions/", json=session_structure)
+        session_id = session_response.json()["id"]
+        assert session_response.status_code == 201
+
+        # 5. Save session as new template
+        new_template_response = client.post(
+            f"/templates/from-session/{session_id}?name=Arm Day Favorite&user_id={user_id}"
+        )
+        assert new_template_response.status_code == 201
+        new_template = new_template_response.json()
+
+        # Verify we have two different templates
+        assert new_template["id"] != original_template_id
+        assert new_template["name"] == "Arm Day Favorite"
+        assert len(new_template["exercise_sessions"]) == 1
