@@ -1,9 +1,10 @@
-from typing import List
+from typing import List, Dict, Any
 from sqlalchemy.orm import Session as DbSession, joinedload
 from fastapi import HTTPException, status
 from sqlalchemy import select
 
 from src.models.template import Template as TemplateModel
+from src.models.session import Session as SessionModel
 from src.models.exercise import Exercise
 from src.models.exercise_session import ExerciseSession
 from src.models.user import User
@@ -135,6 +136,7 @@ def update_template(
 
     Raises:
         HTTPException: If the template with the given ID is not found.
+        HTTPException: If any exercise_id does not exist.
 
     Returns:
         The updated template.
@@ -147,6 +149,32 @@ def update_template(
         )
 
     update_data = template_data.model_dump(exclude_unset=True)
+
+    # Handle exercise_sessions update if provided
+    if 'exercise_sessions' in update_data:
+        exercise_sessions_data = update_data.pop('exercise_sessions')
+
+        # Validate all exercises exist
+        for es_data in exercise_sessions_data:
+            exercise = db.get(Exercise, es_data['exercise_id'])
+            if not exercise:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Exercise with id {es_data['exercise_id']} not found"
+                )
+
+        # Clear existing exercise_sessions
+        db_template.exercise_sessions = []
+
+        # Add new exercise_sessions
+        for es_data in exercise_sessions_data:
+            db_exercise_session = ExerciseSession(
+                exercise_id=es_data['exercise_id'],
+                template_id=None  # Will be set when added to template
+            )
+            db_template.exercise_sessions.append(db_exercise_session)
+
+    # Update other fields (name, user_id)
     for field, value in update_data.items():
         setattr(db_template, field, value)
 
@@ -174,3 +202,102 @@ def delete_template(template_id: int, db: DbSession) -> None:
         )
     db.delete(template)
     db.commit()
+
+
+def get_template_as_session(template_id: int, user_id: int, db: DbSession) -> Dict[str, Any]:
+    """
+    Get a template structure suitable for creating a new session.
+    Returns data in SessionCreate format with exercises (no sets).
+
+    Args:
+        template_id: The ID of the template to use as base.
+        user_id: The ID of the user for the new session.
+        db: The database session.
+
+    Raises:
+        HTTPException: If the template with the given ID is not found.
+        HTTPException: If the user with the given ID is not found.
+
+    Returns:
+        A dictionary in SessionCreate format with exercises from the template.
+    """
+    # Validate user exists
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with id {user_id} not found"
+        )
+
+    # Get template with exercises
+    template = get_template(template_id, db)
+
+    # Build session structure from template
+    return {
+        "user_id": user_id,
+        "date": None,  # Will default to now when creating session
+        "exercise_sessions": [
+            {
+                "exercise_id": es.exercise_id,
+                "sets": []  # Template has no sets - user fills during workout
+            }
+            for es in template.exercise_sessions
+        ]
+    }
+
+
+def create_template_from_session(session_id: int, name: str, user_id: int, db: DbSession) -> TemplateModel:
+    """
+    Create a template from an existing session's exercise list.
+    Saves a workout as a reusable template.
+
+    Args:
+        session_id: The ID of the session to copy exercises from.
+        name: The name for the new template.
+        user_id: The ID of the user who owns the template.
+        db: The database session.
+
+    Raises:
+        HTTPException: If the session with the given ID is not found.
+        HTTPException: If the user with the given ID is not found.
+
+    Returns:
+        The newly created template.
+    """
+    # Validate user exists
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with id {user_id} not found"
+        )
+
+    # Get session with exercises
+    result = db.execute(
+        select(SessionModel)
+        .options(
+            joinedload(SessionModel.exercise_sessions).joinedload(
+                ExerciseSession.exercise
+            )
+        )
+        .where(SessionModel.id == session_id)
+    )
+    session = result.scalars().first()
+
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Session with id {session_id} not found"
+        )
+
+    # Create template with exercises (ignore sets from session)
+    template_data = TemplateCreate(
+        user_id=user_id,
+        name=name,
+        exercise_sessions=[
+            {"exercise_id": es.exercise_id}
+            for es in session.exercise_sessions
+        ]
+    )
+
+    return create_template(template_data, db)
