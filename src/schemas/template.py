@@ -21,6 +21,7 @@ class TemplateUpdate(BaseModel):
     """Schema for updating an existing template."""
     name: Optional[str] = Field(None, min_length=1, max_length=100)
     user_id: Optional[int] = Field(None)
+    exercise_sessions: Optional[List["ExerciseSessionCreate"]] = Field(None, description="Updated exercise sessions for this template")
 
 
 class TemplateResponse(TemplateBase):

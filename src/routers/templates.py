@@ -54,6 +54,33 @@ def create_template(
     return template_service.create_template(template, db)
 
 
+@router.post("/from-session/{session_id}", response_model=TemplateWithExerciseSessions, status_code=status.HTTP_201_CREATED)
+def create_template_from_session(
+    session_id: int,
+    name: str = Query(..., description="Name for the new template"),
+    user_id: int = Query(..., description="User ID who owns the template"),
+    db: Session = Depends(get_db),
+):
+    """
+    Create a template from an existing session's exercises.
+    This allows saving a workout as a reusable template.
+
+    **Use case:** User completes a great workout and wants to save it as a template
+    for future use.
+
+    **Workflow:**
+    - User finishes a workout session
+    - Clicks "Save as template"
+    - Template is created with the session's exercises (sets are ignored)
+    - Template can be used to start future workouts
+
+    - **session_id**: The ID of the session to copy exercises from
+    - **name**: Name for the new template
+    - **user_id**: ID of the user who owns the template
+    """
+    return template_service.create_template_from_session(session_id, name, user_id, db)
+
+
 @router.put("/{template_id}", response_model=TemplateWithExerciseSessions)
 def update_template(
     template_id: int,
@@ -65,7 +92,7 @@ def update_template(
 
     - **template_id**: The ID of the template to update
     - All fields are optional; only provided fields will be updated
-    - Note: This endpoint updates template metadata only, not associated exercises
+    - **exercise_sessions**: Optional list of exercises to replace the current list
     """
     return template_service.update_template(template_id, template, db)
 
