@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from src.database.database import get_db
 from src.schemas.session import SessionCreate, SessionUpdate, SessionWithDetails
-from src.services import session_service
+from src.services import session_service, template_service
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 
@@ -71,6 +71,31 @@ def update_session(
     - Note: This endpoint updates session metadata only, not nested exercises/sets
     """
     return session_service.update_session(session_id, session, db)
+
+
+@router.get("/from-template/{template_id}", response_model=SessionCreate)
+def get_session_from_template(
+    template_id: int,
+    user_id: int = Query(..., description="User ID for the new session"),
+    db: Session = Depends(get_db),
+):
+    """
+    Get a session structure from a template to use as starting point for a new session.
+
+    This endpoint returns data in SessionCreate format that can be:
+    1. Modified by the frontend (add sets, change exercises)
+    2. Submitted to POST /sessions/ to create a new workout
+
+    **Workflow:**
+    - User selects a saved template
+    - Frontend receives exercise list with empty sets
+    - User fills in weights/reps during workout
+    - Frontend submits to POST /sessions/ to save
+
+    - **template_id**: The ID of the template to use
+    - **user_id**: The ID of the user for the new session
+    """
+    return template_service.get_template_as_session(template_id, user_id, db)
 
 
 @router.delete("/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
