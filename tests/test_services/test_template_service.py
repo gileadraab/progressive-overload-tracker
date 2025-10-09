@@ -170,7 +170,10 @@ class TestCreateTemplate:
         template_data = TemplateCreate(
             name="Push Day",
             user_id=sample_user.id,
-            exercise_ids=[sample_exercises[0].id, sample_exercises[1].id]
+            exercise_sessions=[
+                {"exercise_id": sample_exercises[0].id},
+                {"exercise_id": sample_exercises[1].id}
+            ]
         )
 
         result = template_service.create_template(template_data, db_session)
@@ -183,16 +186,20 @@ class TestCreateTemplate:
     def test_create_template_with_duplicate_exercises(
         self, db_session: Session, sample_user: User, sample_exercises: list[Exercise]
     ):
-        """Test creating a template with duplicate exercise IDs removes duplicates."""
+        """Test creating a template with duplicate exercise IDs."""
         template_data = TemplateCreate(
             name="Push Day",
             user_id=sample_user.id,
-            exercise_ids=[sample_exercises[0].id, sample_exercises[0].id]
+            exercise_sessions=[
+                {"exercise_id": sample_exercises[0].id},
+                {"exercise_id": sample_exercises[0].id}
+            ]
         )
 
         result = template_service.create_template(template_data, db_session)
-        assert len(result.exercise_sessions) == 1
+        assert len(result.exercise_sessions) == 2
         assert result.exercise_sessions[0].exercise.name == "Bench Press"
+        assert result.exercise_sessions[1].exercise.name == "Bench Press"
 
     def test_create_template_with_nonexistent_exercise(
         self, db_session: Session, sample_user: User
@@ -201,7 +208,7 @@ class TestCreateTemplate:
         template_data = TemplateCreate(
             name="Push Day",
             user_id=sample_user.id,
-            exercise_ids=[999]
+            exercise_sessions=[{"exercise_id": 999}]
         )
 
         with pytest.raises(HTTPException) as exc_info:
