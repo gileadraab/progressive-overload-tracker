@@ -188,3 +188,50 @@ def delete_session(session_id: int, db: DbSession) -> None:
         )
     db.delete(session)
     db.commit()
+
+
+def get_session_as_template(session_id: int, user_id: int, db: DbSession) -> SessionCreate:
+    """
+    Get a session structure that can be used to create a new session (copy workflow).
+
+    This enables the "repeat last workout" functionality where users copy a previous
+    session as a starting point, modify weights/reps, and save as a new session.
+
+    Args:
+        session_id: The ID of the session to copy.
+        user_id: The user_id for the new session.
+        db: The database session.
+
+    Raises:
+        HTTPException: If the session with the given ID is not found.
+
+    Returns:
+        SessionCreate object with exercises and sets from the source session.
+    """
+    # Fetch the source session with all nested data
+    source_session = get_session(session_id, db)
+
+    # Build exercise_sessions list in the format expected by SessionCreate
+    exercise_sessions_data = []
+    for es in source_session.exercise_sessions:
+        # Build sets list for this exercise
+        sets_data = []
+        for set_obj in es.sets:
+            sets_data.append({
+                "weight": set_obj.weight,
+                "reps": set_obj.reps,
+                "unit": set_obj.unit
+            })
+
+        # Build exercise_session
+        exercise_sessions_data.append({
+            "exercise_id": es.exercise_id,
+            "sets": sets_data
+        })
+
+    # Return SessionCreate with current user_id and copied exercises/sets
+    return SessionCreate(
+        user_id=user_id,
+        date=None,  # Will be set to current time when created
+        exercise_sessions=exercise_sessions_data
+    )
