@@ -15,5 +15,5 @@ class ExerciseSession(Base):
     session = relationship("Session", back_populates="exercise_sessions")
     template = relationship("Template", back_populates="exercise_sessions")
     sets = relationship(
-        "Set", back_populates="exercise_session", cascade="all, delete-orphan"
+        "Set", back_populates="exercise_session", cascade="all, delete-orphan", order_by="Set.id"
     )
