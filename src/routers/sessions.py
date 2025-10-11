@@ -100,6 +100,44 @@ def get_session_from_template(
     return template_service.get_template_as_session(template_id, user_id, db)
 
 
+@router.get("/from-session/{session_id}", response_model=SessionCreate)
+def get_session_copy(
+    session_id: int,
+    user_id: int = Query(..., description="User ID for the new session"),
+    db: Session = Depends(get_db),
+):
+    """
+    Copy a previous session to use as starting point for a new workout.
+
+    This is the PRIMARY progressive overload workflow - "repeat last workout".
+    Users copy their previous workout, modify weights/reps for progression,
+    and submit to POST /sessions/ to save the improved version.
+
+    This endpoint returns data in SessionCreate format that can be:
+    1. Modified by the frontend (increase weights, adjust reps, add sets)
+    2. Submitted to POST /sessions/ to create a new workout
+
+    **Workflow:**
+    - User clicks "Repeat last workout"
+    - Frontend receives previous exercises and sets with weights
+    - User modifies (e.g., increase bench press from 100kg to 102.5kg)
+    - Frontend submits to POST /sessions/ to save
+
+    **Example:**
+    ```
+    GET /sessions/from-session/42?user_id=1
+    # Returns SessionCreate with previous workout data
+    # User increases weights in UI
+    POST /sessions/ with modified data
+    # Creates new session with progressive overload
+    ```
+
+    - **session_id**: The ID of the session to copy
+    - **user_id**: The ID of the user for the new session
+    """
+    return session_service.get_session_as_template(session_id, user_id, db)
+
+
 @router.delete("/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_session(
     session_id: int,
