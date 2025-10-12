@@ -212,3 +212,206 @@ class TestExercisesAPI:
         data = response.json()
         # May be empty or contain exercises that don't match
         assert isinstance(data, list)
+
+
+class TestExerciseHistoryAPI:
+    """Test cases for /exercises/{id}/history endpoint."""
+
+    def test_exercise_history_with_data(self, client: TestClient):
+        """Test getting exercise history with workout data."""
+        # Create user
+        user_response = client.post("/users/", json={"username": "testuser"})
+        user_id = user_response.json()["id"]
+
+        # Create exercise
+        exercise_response = client.post("/exercises/", json={
+            "name": "Bench Press",
+            "category": "chest",
+            "equipment": "barbell"
+        })
+        exercise_id = exercise_response.json()["id"]
+
+        # Create session with sets
+        session_data = {
+            "user_id": user_id,
+            "exercise_sessions": [{
+                "exercise_id": exercise_id,
+                "sets": [
+                    {"weight": 100, "reps": 10, "unit": "kg"},
+                    {"weight": 100, "reps": 8, "unit": "kg"}
+                ]
+            }]
+        }
+        client.post("/sessions/", json=session_data)
+
+        # Get history
+        response = client.get(f"/exercises/{exercise_id}/history?user_id={user_id}")
+        assert response.status_code == 200
+        data = response.json()
+
+        # Verify structure
+        assert data["exercise_id"] == exercise_id
+        assert data["last_performed"] is not None
+        assert len(data["last_performed"]["sets"]) == 2
+        assert data["last_performed"]["max_weight"] == 100
+        assert data["last_performed"]["total_volume"] == 1800  # 100*10 + 100*8
+        assert data["personal_best"] is not None
+        assert data["progression_suggestion"] is not None
+
+    def test_exercise_history_no_data(self, client: TestClient):
+        """Test getting history when no workout data exists."""
+        # Create user and exercise
+        user_response = client.post("/users/", json={"username": "newuser"})
+        user_id = user_response.json()["id"]
+
+        exercise_response = client.post("/exercises/", json={
+            "name": "Squat",
+            "category": "legs"
+        })
+        exercise_id = exercise_response.json()["id"]
+
+        # Get history (no workouts yet)
+        response = client.get(f"/exercises/{exercise_id}/history?user_id={user_id}")
+        assert response.status_code == 200
+        data = response.json()
+
+        assert data["exercise_id"] == exercise_id
+        assert data["last_performed"] is None
+        assert data["personal_best"] is None
+        assert data["recent_sessions"] == []
+        assert data["progression_suggestion"] is None
+
+    def test_exercise_history_personal_best(self, client: TestClient):
+        """Test that personal best is correctly identified."""
+        # Create user and exercise
+        user_response = client.post("/users/", json={"username": "athlete"})
+        user_id = user_response.json()["id"]
+
+        exercise_response = client.post("/exercises/", json={
+            "name": "Deadlift",
+            "category": "back"
+        })
+        exercise_id = exercise_response.json()["id"]
+
+        # Create two sessions - second has higher 1RM
+        session1 = {
+            "user_id": user_id,
+            "exercise_sessions": [{
+                "exercise_id": exercise_id,
+                "sets": [{"weight": 100, "reps": 10, "unit": "kg"}]
+            }]
+        }
+        client.post("/sessions/", json=session1)
+
+        session2 = {
+            "user_id": user_id,
+            "exercise_sessions": [{
+                "exercise_id": exercise_id,
+                "sets": [{"weight": 140, "reps": 3, "unit": "kg"}]
+            }]
+        }
+        client.post("/sessions/", json=session2)
+
+        # Get history
+        response = client.get(f"/exercises/{exercise_id}/history?user_id={user_id}")
+        data = response.json()
+
+        # 140x3 has higher estimated 1RM than 100x10
+        assert data["personal_best"]["weight"] == 140
+        assert data["personal_best"]["reps"] == 3
+        assert data["personal_best"]["estimated_1rm"] > 140
+
+    def test_exercise_history_progression_suggestion(self, client: TestClient):
+        """Test progression suggestions based on last workout."""
+        # Create user and exercise
+        user_response = client.post("/users/", json={"username": "progressor"})
+        user_id = user_response.json()["id"]
+
+        exercise_response = client.post("/exercises/", json={
+            "name": "Overhead Press",
+            "category": "shoulders"
+        })
+        exercise_id = exercise_response.json()["id"]
+
+        # Create session where user hit 10 reps (should suggest weight increase)
+        session_data = {
+            "user_id": user_id,
+            "exercise_sessions": [{
+                "exercise_id": exercise_id,
+                "sets": [{"weight": 60, "reps": 10, "unit": "kg"}]
+            }]
+        }
+        client.post("/sessions/", json=session_data)
+
+        # Get history
+        response = client.get(f"/exercises/{exercise_id}/history?user_id={user_id}")
+        data = response.json()
+
+        # Should suggest increasing weight since hit 8+ reps
+        suggestion = data["progression_suggestion"]
+        assert suggestion["recommended_weight"] == 62.5
+        assert suggestion["recommended_reps"] == 10
+        assert "increase weight" in suggestion["rationale"].lower()
+
+    def test_exercise_history_user_isolation(self, client: TestClient):
+        """Test that history is isolated per user."""
+        # Create two users
+        user1_response = client.post("/users/", json={"username": "user1"})
+        user1_id = user1_response.json()["id"]
+
+        user2_response = client.post("/users/", json={"username": "user2"})
+        user2_id = user2_response.json()["id"]
+
+        # Create exercise
+        exercise_response = client.post("/exercises/", json={
+            "name": "Row",
+            "category": "back"
+        })
+        exercise_id = exercise_response.json()["id"]
+
+        # User1's session
+        session1 = {
+            "user_id": user1_id,
+            "exercise_sessions": [{
+                "exercise_id": exercise_id,
+                "sets": [{"weight": 80, "reps": 10, "unit": "kg"}]
+            }]
+        }
+        client.post("/sessions/", json=session1)
+
+        # User2's session (higher weight)
+        session2 = {
+            "user_id": user2_id,
+            "exercise_sessions": [{
+                "exercise_id": exercise_id,
+                "sets": [{"weight": 120, "reps": 10, "unit": "kg"}]
+            }]
+        }
+        client.post("/sessions/", json=session2)
+
+        # Get user1's history
+        response = client.get(f"/exercises/{exercise_id}/history?user_id={user1_id}")
+        data = response.json()
+
+        # Should only see user1's 80kg, not user2's 120kg
+        assert data["personal_best"]["weight"] == 80
+        assert data["last_performed"]["max_weight"] == 80
+
+    def test_exercise_history_nonexistent_exercise(self, client: TestClient):
+        """Test history for non-existent exercise."""
+        user_response = client.post("/users/", json={"username": "testuser"})
+        user_id = user_response.json()["id"]
+
+        response = client.get(f"/exercises/99999/history?user_id={user_id}")
+        assert response.status_code == 404
+
+    def test_exercise_history_missing_user_id(self, client: TestClient):
+        """Test that user_id query parameter is required."""
+        exercise_response = client.post("/exercises/", json={
+            "name": "Test Exercise",
+            "category": "arms"
+        })
+        exercise_id = exercise_response.json()["id"]
+
+        response = client.get(f"/exercises/{exercise_id}/history")
+        assert response.status_code == 422  # Missing required query param
