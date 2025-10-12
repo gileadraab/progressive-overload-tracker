@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from src.database.database import get_db
 from src.models.enums import CategoryEnum, EquipmentEnum
-from src.schemas.exercise import ExerciseCreate, ExerciseUpdate, ExerciseResponse
+from src.schemas.exercise import ExerciseCreate, ExerciseUpdate, ExerciseResponse, ExerciseHistory
 from src.services import exercise_service
 
 router = APIRouter(prefix="/exercises", tags=["exercises"])
@@ -76,6 +76,24 @@ def update_exercise(
     - All fields are optional; only provided fields will be updated
     """
     return exercise_service.update_exercise(exercise_id, exercise, db)
+
+
+@router.get("/{exercise_id}/history", response_model=ExerciseHistory)
+def get_exercise_history(
+    exercise_id: int,
+    user_id: int = Query(..., description="User ID to get history for"),
+    db: Session = Depends(get_db),
+):
+    """
+    Get historical performance data for an exercise for a specific user.
+
+    Includes:
+    - **last_performed**: Most recent session with this exercise
+    - **personal_best**: Best performance (highest estimated 1RM)
+    - **recent_sessions**: Summary of last 5 sessions
+    - **progression_suggestion**: Recommended weight/reps for progressive overload
+    """
+    return exercise_service.get_exercise_history(exercise_id, user_id, db)
 
 
 @router.delete("/{exercise_id}", status_code=status.HTTP_204_NO_CONTENT)
