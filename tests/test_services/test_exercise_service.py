@@ -397,6 +397,18 @@ class TestCalculateProgression:
         assert result["recommended_weight"] == 92.5
         assert result["recommended_reps"] == 10
 
+    def test_progression_with_stacks_unit(self):
+        """Test progression uses 1 stack increment for stacks unit."""
+        recent_sets = [
+            {"weight": 10, "reps": 10, "unit": "stacks"}
+        ]
+
+        result = exercise_service.calculate_progression(recent_sets)
+        # Should increment by 1 stack, not 2.5
+        assert result["recommended_weight"] == 11
+        assert result["recommended_reps"] == 10
+        assert "1 stack" in result["rationale"]
+
 
 class TestGetExerciseHistory:
     """Test suite for get_exercise_history function."""

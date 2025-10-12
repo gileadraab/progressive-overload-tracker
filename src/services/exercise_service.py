@@ -195,12 +195,16 @@ def calculate_progression(recent_sets: List[Dict[str, Any]]) -> Optional[Dict[st
     # Find the best set by total volume (weight × reps)
     best_set = max(recent_sets, key=lambda s: s["weight"] * s["reps"])
 
-    # Progressive overload: add 2.5kg if they hit target reps (8+)
+    # Progressive overload: add weight if they hit target reps (8+)
     if best_set["reps"] >= 8:
+        # Unit-aware increment: 2.5kg for kg, 1 stack for stacks
+        increment = 2.5 if best_set["unit"] == "kg" else 1
+        unit_label = "kg" if best_set["unit"] == "kg" else "stack"
+
         return {
-            "recommended_weight": best_set["weight"] + 2.5,
+            "recommended_weight": best_set["weight"] + increment,
             "recommended_reps": best_set["reps"],
-            "rationale": "You hit target reps - increase weight by 2.5kg"
+            "rationale": f"You hit target reps - increase weight by {increment} {unit_label}"
         }
     else:
         return {
