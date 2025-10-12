@@ -1,6 +1,6 @@
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, Field, HttpUrl, ConfigDict
-from src.models.enums import EquipmentEnum, CategoryEnum
+from src.models.enums import EquipmentEnum, CategoryEnum, UnitEnum
 
 
 class ExerciseBase(BaseModel):
@@ -40,3 +40,47 @@ class ExerciseResponse(ExerciseBase):
 
 # Alias for backward compatibility
 ExerciseRead = ExerciseResponse
+
+
+# Exercise History Schemas
+class SetSummary(BaseModel):
+    weight: float
+    reps: int
+    unit: str
+
+
+class LastPerformed(BaseModel):
+    session_id: int
+    date: str
+    sets: List[SetSummary]
+    max_weight: float
+    total_volume: float
+
+
+class PersonalBest(BaseModel):
+    weight: float
+    reps: int
+    date: str
+    session_id: int
+    estimated_1rm: float
+
+
+class RecentSession(BaseModel):
+    session_id: int
+    date: str
+    sets: List[SetSummary]
+    best_set: SetSummary
+
+
+class ProgressionSuggestion(BaseModel):
+    recommended_weight: float
+    recommended_reps: int
+    rationale: str
+
+
+class ExerciseHistory(BaseModel):
+    exercise_id: int
+    last_performed: Optional[LastPerformed] = None
+    personal_best: Optional[PersonalBest] = None
+    recent_sessions: List[RecentSession] = []
+    progression_suggestion: Optional[ProgressionSuggestion] = None
