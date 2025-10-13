@@ -1,9 +1,11 @@
 from typing import List, Optional
+
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from src.database.database import get_db
-from src.schemas.session import SessionCreate, SessionUpdate, SessionWithDetails
+from src.schemas.session import (SessionCreate, SessionUpdate,
+                                 SessionWithDetails)
 from src.services import session_service, template_service
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
@@ -12,7 +14,9 @@ router = APIRouter(prefix="/sessions", tags=["sessions"])
 @router.get("/", response_model=List[SessionWithDetails])
 def list_sessions(
     skip: int = Query(0, ge=0, description="Number of records to skip"),
-    limit: int = Query(100, ge=1, le=1000, description="Maximum number of records to return"),
+    limit: int = Query(
+        100, ge=1, le=1000, description="Maximum number of records to return"
+    ),
     user_id: Optional[int] = Query(None, description="Filter by user ID"),
     db: Session = Depends(get_db),
 ):
@@ -39,7 +43,9 @@ def get_session(
     return session_service.get_session(session_id, db)
 
 
-@router.post("/", response_model=SessionWithDetails, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/", response_model=SessionWithDetails, status_code=status.HTTP_201_CREATED
+)
 def create_session(
     session: SessionCreate,
     db: Session = Depends(get_db),

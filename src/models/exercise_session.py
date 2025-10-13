@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 
 from src.database.database import Base
 
+
 class ExerciseSession(Base):
     __tablename__ = "exercise_sessions"
 
@@ -15,5 +16,8 @@ class ExerciseSession(Base):
     session = relationship("Session", back_populates="exercise_sessions")
     template = relationship("Template", back_populates="exercise_sessions")
     sets = relationship(
-        "Set", back_populates="exercise_session", cascade="all, delete-orphan", order_by="Set.id"
+        "Set",
+        back_populates="exercise_session",
+        cascade="all, delete-orphan",
+        order_by="Set.id",
     )

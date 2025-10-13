@@ -1,8 +1,11 @@
-from sqlalchemy import Column, Integer, String, Enum as SqlEnum
+from sqlalchemy import Column
+from sqlalchemy import Enum as SqlEnum
+from sqlalchemy import Integer, String
 from sqlalchemy.orm import relationship
 
 from src.database.database import Base
-from src.models.enums import EquipmentEnum, CategoryEnum
+from src.models.enums import CategoryEnum, EquipmentEnum
+
 
 class Exercise(Base):
     __tablename__ = "exercises"

@@ -1,7 +1,8 @@
 from typing import List
-from sqlalchemy.orm import Session as DbSession, joinedload
+
 from fastapi import HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.orm import Session as DbSession
 
 from src.models.user import User
 from src.schemas.user import UserCreate, UserUpdate
@@ -20,7 +21,7 @@ def get_users(db: DbSession, skip: int = 0, limit: int = 100) -> List[User]:
         A list of all users.
     """
     result = db.execute(select(User).offset(skip).limit(limit))
-    return result.scalars().all()
+    return list(result.scalars().all())
 
 
 def get_user(user_id: int, db: DbSession) -> User:
@@ -86,9 +87,9 @@ def create_user(user: UserCreate, db: DbSession) -> User:
         The newly created user.
     """
     # Check if username already exists
-    existing_user = db.execute(
-        select(User).where(User.username == user.username)
-    ).scalars().first()
+    existing_user = (
+        db.execute(select(User).where(User.username == user.username)).scalars().first()
+    )
 
     if existing_user:
         raise HTTPException(
@@ -128,13 +129,16 @@ def update_user(user_id: int, user: UserUpdate, db: DbSession) -> User:
     update_data = user.model_dump(exclude_unset=True)
 
     # Check if username is being updated and if it's already taken
-    if 'username' in update_data:
-        existing_user = db.execute(
-            select(User).where(
-                User.username == update_data['username'],
-                User.id != user_id
+    if "username" in update_data:
+        existing_user = (
+            db.execute(
+                select(User).where(
+                    User.username == update_data["username"], User.id != user_id
+                )
             )
-        ).scalars().first()
+            .scalars()
+            .first()
+        )
 
         if existing_user:
             raise HTTPException(

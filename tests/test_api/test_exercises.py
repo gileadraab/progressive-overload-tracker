@@ -1,6 +1,5 @@
 """Integration tests for exercises API endpoints."""
 
-import pytest
 from fastapi.testclient import TestClient
 
 
@@ -21,6 +20,7 @@ class TestExercisesAPI:
         assert data["category"] == "chest"
         assert data["equipment"] == "barbell"
         assert "id" in data
+
     def test_create_exercise_invalid_category(self, client: TestClient):
         """Test creating exercise with invalid category."""
         exercise_data = {
@@ -60,7 +60,11 @@ class TestExercisesAPI:
     def test_get_exercise_by_id(self, client: TestClient):
         """Test retrieving a specific exercise by ID."""
         # Create exercise
-        exercise_data = {"name": "Pull-up", "category": "back", "equipment": "bodyweight"}
+        exercise_data = {
+            "name": "Pull-up",
+            "category": "back",
+            "equipment": "bodyweight",
+        }
         create_response = client.post("/exercises/", json=exercise_data)
         exercise_id = create_response.json()["id"]
 
@@ -79,12 +83,20 @@ class TestExercisesAPI:
     def test_update_exercise(self, client: TestClient):
         """Test updating an exercise."""
         # Create exercise
-        exercise_data = {"name": "Leg Press", "category": "legs", "equipment": "machine"}
+        exercise_data = {
+            "name": "Leg Press",
+            "category": "legs",
+            "equipment": "machine",
+        }
         create_response = client.post("/exercises/", json=exercise_data)
         exercise_id = create_response.json()["id"]
 
         # Update exercise
-        update_data = {"name": "Leg Press Machine", "category": "legs", "equipment": "machine"}
+        update_data = {
+            "name": "Leg Press Machine",
+            "category": "legs",
+            "equipment": "machine",
+        }
         response = client.put(f"/exercises/{exercise_id}", json=update_data)
         assert response.status_code == 200
         data = response.json()
@@ -92,14 +104,22 @@ class TestExercisesAPI:
 
     def test_update_exercise_not_found(self, client: TestClient):
         """Test updating non-existent exercise."""
-        update_data = {"name": "Ghost Exercise", "category": "chest", "equipment": "barbell"}
+        update_data = {
+            "name": "Ghost Exercise",
+            "category": "chest",
+            "equipment": "barbell",
+        }
         response = client.put("/exercises/99999", json=update_data)
         assert response.status_code == 404
 
     def test_delete_exercise(self, client: TestClient):
         """Test deleting an exercise."""
         # Create exercise
-        exercise_data = {"name": "Tricep Extension", "category": "arms", "equipment": "dumbbell"}
+        exercise_data = {
+            "name": "Tricep Extension",
+            "category": "arms",
+            "equipment": "dumbbell",
+        }
         create_response = client.post("/exercises/", json=exercise_data)
         exercise_id = create_response.json()["id"]
 
@@ -174,9 +194,21 @@ class TestExercisesAPI:
         """Test searching exercises with multiple filters."""
         # Create exercises
         exercises = [
-            {"name": "Dumbbell Shoulder Press", "category": "shoulders", "equipment": "dumbbell"},
-            {"name": "Barbell Shoulder Press", "category": "shoulders", "equipment": "barbell"},
-            {"name": "Dumbbell Chest Press", "category": "chest", "equipment": "dumbbell"},
+            {
+                "name": "Dumbbell Shoulder Press",
+                "category": "shoulders",
+                "equipment": "dumbbell",
+            },
+            {
+                "name": "Barbell Shoulder Press",
+                "category": "shoulders",
+                "equipment": "barbell",
+            },
+            {
+                "name": "Dumbbell Chest Press",
+                "category": "chest",
+                "equipment": "dumbbell",
+            },
         ]
         for exercise in exercises:
             client.post("/exercises/", json=exercise)
@@ -186,7 +218,10 @@ class TestExercisesAPI:
         assert response.status_code == 200
         data = response.json()
         assert len(data) >= 1
-        assert all(ex["category"] == "shoulders" and ex["equipment"] == "dumbbell" for ex in data)
+        assert all(
+            ex["category"] == "shoulders" and ex["equipment"] == "dumbbell"
+            for ex in data
+        )
 
     def test_pagination_skip_limit(self, client: TestClient):
         """Test pagination with skip and limit."""
@@ -224,23 +259,24 @@ class TestExerciseHistoryAPI:
         user_id = user_response.json()["id"]
 
         # Create exercise
-        exercise_response = client.post("/exercises/", json={
-            "name": "Bench Press",
-            "category": "chest",
-            "equipment": "barbell"
-        })
+        exercise_response = client.post(
+            "/exercises/",
+            json={"name": "Bench Press", "category": "chest", "equipment": "barbell"},
+        )
         exercise_id = exercise_response.json()["id"]
 
         # Create session with sets
         session_data = {
             "user_id": user_id,
-            "exercise_sessions": [{
-                "exercise_id": exercise_id,
-                "sets": [
-                    {"weight": 100, "reps": 10, "unit": "kg"},
-                    {"weight": 100, "reps": 8, "unit": "kg"}
-                ]
-            }]
+            "exercise_sessions": [
+                {
+                    "exercise_id": exercise_id,
+                    "sets": [
+                        {"weight": 100, "reps": 10, "unit": "kg"},
+                        {"weight": 100, "reps": 8, "unit": "kg"},
+                    ],
+                }
+            ],
         }
         client.post("/sessions/", json=session_data)
 
@@ -264,10 +300,9 @@ class TestExerciseHistoryAPI:
         user_response = client.post("/users/", json={"username": "newuser"})
         user_id = user_response.json()["id"]
 
-        exercise_response = client.post("/exercises/", json={
-            "name": "Squat",
-            "category": "legs"
-        })
+        exercise_response = client.post(
+            "/exercises/", json={"name": "Squat", "category": "legs"}
+        )
         exercise_id = exercise_response.json()["id"]
 
         # Get history (no workouts yet)
@@ -287,28 +322,31 @@ class TestExerciseHistoryAPI:
         user_response = client.post("/users/", json={"username": "athlete"})
         user_id = user_response.json()["id"]
 
-        exercise_response = client.post("/exercises/", json={
-            "name": "Deadlift",
-            "category": "back"
-        })
+        exercise_response = client.post(
+            "/exercises/", json={"name": "Deadlift", "category": "back"}
+        )
         exercise_id = exercise_response.json()["id"]
 
         # Create two sessions - second has higher 1RM
         session1 = {
             "user_id": user_id,
-            "exercise_sessions": [{
-                "exercise_id": exercise_id,
-                "sets": [{"weight": 100, "reps": 10, "unit": "kg"}]
-            }]
+            "exercise_sessions": [
+                {
+                    "exercise_id": exercise_id,
+                    "sets": [{"weight": 100, "reps": 10, "unit": "kg"}],
+                }
+            ],
         }
         client.post("/sessions/", json=session1)
 
         session2 = {
             "user_id": user_id,
-            "exercise_sessions": [{
-                "exercise_id": exercise_id,
-                "sets": [{"weight": 140, "reps": 3, "unit": "kg"}]
-            }]
+            "exercise_sessions": [
+                {
+                    "exercise_id": exercise_id,
+                    "sets": [{"weight": 140, "reps": 3, "unit": "kg"}],
+                }
+            ],
         }
         client.post("/sessions/", json=session2)
 
@@ -327,19 +365,20 @@ class TestExerciseHistoryAPI:
         user_response = client.post("/users/", json={"username": "progressor"})
         user_id = user_response.json()["id"]
 
-        exercise_response = client.post("/exercises/", json={
-            "name": "Overhead Press",
-            "category": "shoulders"
-        })
+        exercise_response = client.post(
+            "/exercises/", json={"name": "Overhead Press", "category": "shoulders"}
+        )
         exercise_id = exercise_response.json()["id"]
 
         # Create session where user hit 10 reps (should suggest weight increase)
         session_data = {
             "user_id": user_id,
-            "exercise_sessions": [{
-                "exercise_id": exercise_id,
-                "sets": [{"weight": 60, "reps": 10, "unit": "kg"}]
-            }]
+            "exercise_sessions": [
+                {
+                    "exercise_id": exercise_id,
+                    "sets": [{"weight": 60, "reps": 10, "unit": "kg"}],
+                }
+            ],
         }
         client.post("/sessions/", json=session_data)
 
@@ -363,29 +402,32 @@ class TestExerciseHistoryAPI:
         user2_id = user2_response.json()["id"]
 
         # Create exercise
-        exercise_response = client.post("/exercises/", json={
-            "name": "Row",
-            "category": "back"
-        })
+        exercise_response = client.post(
+            "/exercises/", json={"name": "Row", "category": "back"}
+        )
         exercise_id = exercise_response.json()["id"]
 
         # User1's session
         session1 = {
             "user_id": user1_id,
-            "exercise_sessions": [{
-                "exercise_id": exercise_id,
-                "sets": [{"weight": 80, "reps": 10, "unit": "kg"}]
-            }]
+            "exercise_sessions": [
+                {
+                    "exercise_id": exercise_id,
+                    "sets": [{"weight": 80, "reps": 10, "unit": "kg"}],
+                }
+            ],
         }
         client.post("/sessions/", json=session1)
 
         # User2's session (higher weight)
         session2 = {
             "user_id": user2_id,
-            "exercise_sessions": [{
-                "exercise_id": exercise_id,
-                "sets": [{"weight": 120, "reps": 10, "unit": "kg"}]
-            }]
+            "exercise_sessions": [
+                {
+                    "exercise_id": exercise_id,
+                    "sets": [{"weight": 120, "reps": 10, "unit": "kg"}],
+                }
+            ],
         }
         client.post("/sessions/", json=session2)
 
@@ -407,10 +449,9 @@ class TestExerciseHistoryAPI:
 
     def test_exercise_history_missing_user_id(self, client: TestClient):
         """Test that user_id query parameter is required."""
-        exercise_response = client.post("/exercises/", json={
-            "name": "Test Exercise",
-            "category": "arms"
-        })
+        exercise_response = client.post(
+            "/exercises/", json={"name": "Test Exercise", "category": "arms"}
+        )
         exercise_id = exercise_response.json()["id"]
 
         response = client.get(f"/exercises/{exercise_id}/history")

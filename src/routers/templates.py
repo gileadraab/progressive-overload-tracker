@@ -1,9 +1,11 @@
 from typing import List, Optional
+
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from src.database.database import get_db
-from src.schemas.template import TemplateCreate, TemplateUpdate, TemplateWithExerciseSessions
+from src.schemas.template import (TemplateCreate, TemplateUpdate,
+                                  TemplateWithExerciseSessions)
 from src.services import template_service
 
 router = APIRouter(prefix="/templates", tags=["templates"])
@@ -12,7 +14,9 @@ router = APIRouter(prefix="/templates", tags=["templates"])
 @router.get("/", response_model=List[TemplateWithExerciseSessions])
 def list_templates(
     skip: int = Query(0, ge=0, description="Number of records to skip"),
-    limit: int = Query(100, ge=1, le=1000, description="Maximum number of records to return"),
+    limit: int = Query(
+        100, ge=1, le=1000, description="Maximum number of records to return"
+    ),
     user_id: Optional[int] = Query(None, description="Filter by user ID"),
     db: Session = Depends(get_db),
 ):
@@ -39,7 +43,11 @@ def get_template(
     return template_service.get_template(template_id, db)
 
 
-@router.post("/", response_model=TemplateWithExerciseSessions, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=TemplateWithExerciseSessions,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_template(
     template: TemplateCreate,
     db: Session = Depends(get_db),
@@ -54,7 +62,11 @@ def create_template(
     return template_service.create_template(template, db)
 
 
-@router.post("/from-session/{session_id}", response_model=TemplateWithExerciseSessions, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/from-session/{session_id}",
+    response_model=TemplateWithExerciseSessions,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_template_from_session(
     session_id: int,
     name: str = Query(..., description="Name for the new template"),

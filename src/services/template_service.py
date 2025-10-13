@@ -1,13 +1,16 @@
-from typing import List, Optional, Dict, Any
-from sqlalchemy.orm import Session as DbSession, joinedload
+from typing import Any, Dict, List, Optional
+
 from fastapi import HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.orm import Session as DbSession
+from sqlalchemy.orm import joinedload
 
-from src.models.template import Template as TemplateModel
-from src.models.session import Session as SessionModel
 from src.models.exercise import Exercise
 from src.models.exercise_session import ExerciseSession
+from src.models.session import Session as SessionModel
+from src.models.template import Template as TemplateModel
 from src.models.user import User
+from src.schemas.exercise_session import ExerciseSessionCreate
 from src.schemas.template import TemplateCreate, TemplateUpdate
 
 
@@ -33,14 +36,14 @@ def get_templates(
         joinedload(TemplateModel.exercise_sessions).joinedload(
             ExerciseSession.exercise
         ),
-        joinedload(TemplateModel.user)
+        joinedload(TemplateModel.user),
     )
 
     if user_id:
         query = query.where(TemplateModel.user_id == user_id)
 
     result = db.execute(query.offset(skip).limit(limit))
-    return result.scalars().unique().all()
+    return list(result.scalars().unique().all())
 
 
 def get_template(template_id: int, db: DbSession) -> TemplateModel:
@@ -63,7 +66,7 @@ def get_template(template_id: int, db: DbSession) -> TemplateModel:
             joinedload(TemplateModel.exercise_sessions).joinedload(
                 ExerciseSession.exercise
             ),
-            joinedload(TemplateModel.user)
+            joinedload(TemplateModel.user),
         )
         .where(TemplateModel.id == template_id)
     )
@@ -94,31 +97,33 @@ def create_template(template_data: TemplateCreate, db: DbSession) -> TemplateMod
     template_dict = template_data.model_dump()
 
     # Validate user exists
-    user = db.get(User, template_dict['user_id'])
+    user = db.get(User, template_dict["user_id"])
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User with id {template_dict['user_id']} not found"
+            detail=f"User with id {template_dict['user_id']} not found",
         )
 
-    exercise_sessions_data = template_dict.pop('exercise_sessions', [])
+    exercise_sessions_data = template_dict.pop("exercise_sessions", [])
 
     # Validate all exercises exist
     for es_data in exercise_sessions_data:
-        exercise = db.get(Exercise, es_data['exercise_id'])
+        exercise = db.get(Exercise, es_data["exercise_id"])
         if not exercise:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Exercise with id {es_data['exercise_id']} not found"
+                detail=f"Exercise with id {es_data['exercise_id']} not found",
             )
 
-    db_template = TemplateModel(name=template_dict['name'], user_id=template_dict['user_id'])
+    db_template = TemplateModel(
+        name=template_dict["name"], user_id=template_dict["user_id"]
+    )
 
     # Create exercise sessions for the template
     for es_data in exercise_sessions_data:
         db_exercise_session = ExerciseSession(
-            exercise_id=es_data['exercise_id'],
-            template_id=None  # Will be set when added to template
+            exercise_id=es_data["exercise_id"],
+            template_id=None,  # Will be set when added to template
         )
         db_template.exercise_sessions.append(db_exercise_session)
 
@@ -126,7 +131,7 @@ def create_template(template_data: TemplateCreate, db: DbSession) -> TemplateMod
     db.commit()
     db.refresh(db_template)
 
-    return get_template(db_template.id, db)
+    return get_template(int(db_template.id), db)
 
 
 def update_template(
@@ -157,16 +162,16 @@ def update_template(
     update_data = template_data.model_dump(exclude_unset=True)
 
     # Handle exercise_sessions update if provided
-    if 'exercise_sessions' in update_data:
-        exercise_sessions_data = update_data.pop('exercise_sessions')
+    if "exercise_sessions" in update_data:
+        exercise_sessions_data = update_data.pop("exercise_sessions")
 
         # Validate all exercises exist
         for es_data in exercise_sessions_data:
-            exercise = db.get(Exercise, es_data['exercise_id'])
+            exercise = db.get(Exercise, es_data["exercise_id"])
             if not exercise:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Exercise with id {es_data['exercise_id']} not found"
+                    detail=f"Exercise with id {es_data['exercise_id']} not found",
                 )
 
         # Clear existing exercise_sessions
@@ -175,8 +180,8 @@ def update_template(
         # Add new exercise_sessions
         for es_data in exercise_sessions_data:
             db_exercise_session = ExerciseSession(
-                exercise_id=es_data['exercise_id'],
-                template_id=None  # Will be set when added to template
+                exercise_id=es_data["exercise_id"],
+                template_id=None,  # Will be set when added to template
             )
             db_template.exercise_sessions.append(db_exercise_session)
 
@@ -210,7 +215,9 @@ def delete_template(template_id: int, db: DbSession) -> None:
     db.commit()
 
 
-def get_template_as_session(template_id: int, user_id: int, db: DbSession) -> Dict[str, Any]:
+def get_template_as_session(
+    template_id: int, user_id: int, db: DbSession
+) -> Dict[str, Any]:
     """
     Get a template structure suitable for creating a new session.
     Returns data in SessionCreate format with exercises (no sets).
@@ -232,7 +239,7 @@ def get_template_as_session(template_id: int, user_id: int, db: DbSession) -> Di
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User with id {user_id} not found"
+            detail=f"User with id {user_id} not found",
         )
 
     # Get template with exercises
@@ -245,14 +252,16 @@ def get_template_as_session(template_id: int, user_id: int, db: DbSession) -> Di
         "exercise_sessions": [
             {
                 "exercise_id": es.exercise_id,
-                "sets": []  # Template has no sets - user fills during workout
+                "sets": [],  # Template has no sets - user fills during workout
             }
             for es in template.exercise_sessions
-        ]
+        ],
     }
 
 
-def create_template_from_session(session_id: int, name: str, user_id: int, db: DbSession) -> TemplateModel:
+def create_template_from_session(
+    session_id: int, name: str, user_id: int, db: DbSession
+) -> TemplateModel:
     """
     Create a template from an existing session's exercise list.
     Saves a workout as a reusable template.
@@ -275,7 +284,7 @@ def create_template_from_session(session_id: int, name: str, user_id: int, db: D
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User with id {user_id} not found"
+            detail=f"User with id {user_id} not found",
         )
 
     # Get session with exercises
@@ -293,7 +302,7 @@ def create_template_from_session(session_id: int, name: str, user_id: int, db: D
     if not session:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Session with id {session_id} not found"
+            detail=f"Session with id {session_id} not found",
         )
 
     # Create template with exercises (ignore sets from session)
@@ -301,9 +310,14 @@ def create_template_from_session(session_id: int, name: str, user_id: int, db: D
         user_id=user_id,
         name=name,
         exercise_sessions=[
-            {"exercise_id": es.exercise_id}
+            ExerciseSessionCreate(
+                exercise_id=es.exercise_id,
+                session_id=None,
+                template_id=None,
+                sets=[],
+            )
             for es in session.exercise_sessions
-        ]
+        ],
     )
 
     return create_template(template_data, db)

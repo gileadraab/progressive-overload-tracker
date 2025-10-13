@@ -1,15 +1,17 @@
-import pytest
 from datetime import datetime
+
+import pytest
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from src.models.session import Session as SessionModel
-from src.models.user import User
-from src.models.exercise import Exercise, CategoryEnum, EquipmentEnum
+from src.models.exercise import CategoryEnum, EquipmentEnum, Exercise
 from src.models.exercise_session import ExerciseSession
-from src.models.set import Set as SetModel, UnitEnum
-from src.schemas.session import SessionCreate, SessionUpdate
+from src.models.session import Session as SessionModel
+from src.models.set import Set as SetModel
+from src.models.set import UnitEnum
+from src.models.user import User
 from src.schemas.exercise_session import ExerciseSessionCreate
+from src.schemas.session import SessionCreate, SessionUpdate
 from src.schemas.set import SetCreate
 from src.services import session_service
 
@@ -28,9 +30,7 @@ def sample_user(db_session: Session) -> User:
 def sample_exercise(db_session: Session) -> Exercise:
     """Create a sample exercise for testing."""
     exercise = Exercise(
-        name="Bench Press",
-        category=CategoryEnum.CHEST,
-        equipment=EquipmentEnum.BARBELL
+        name="Bench Press", category=CategoryEnum.CHEST, equipment=EquipmentEnum.BARBELL
     )
     db_session.add(exercise)
     db_session.commit()
@@ -82,7 +82,9 @@ class TestGetSessions:
         result = session_service.get_sessions(db_session)
         assert result == []
 
-    def test_get_sessions_with_nested_data(self, db_session: Session, sample_user: User, sample_exercise: Exercise):
+    def test_get_sessions_with_nested_data(
+        self, db_session: Session, sample_user: User, sample_exercise: Exercise
+    ):
         """Test that sessions are loaded with nested exercise_sessions and sets."""
         # Create session with nested data
         session = SessionModel(user_id=sample_user.id, date=datetime.now())
@@ -90,8 +92,7 @@ class TestGetSessions:
         db_session.flush()
 
         exercise_session = ExerciseSession(
-            session_id=session.id,
-            exercise_id=sample_exercise.id
+            session_id=session.id, exercise_id=sample_exercise.id
         )
         db_session.add(exercise_session)
         db_session.flush()
@@ -100,7 +101,7 @@ class TestGetSessions:
             exercise_session_id=exercise_session.id,
             weight=100.0,
             reps=10,
-            unit=UnitEnum.kg
+            unit=UnitEnum.kg,
         )
         db_session.add(set_item)
         db_session.commit()
@@ -126,7 +127,9 @@ class TestGetSession:
         assert result.id == session.id
         assert result.user_id == sample_user.id
 
-    def test_get_session_with_nested_data(self, db_session: Session, sample_user: User, sample_exercise: Exercise):
+    def test_get_session_with_nested_data(
+        self, db_session: Session, sample_user: User, sample_exercise: Exercise
+    ):
         """Test getting a session with nested exercise sessions and sets."""
         # Create session with nested data
         session = SessionModel(user_id=sample_user.id, date=datetime.now())
@@ -134,8 +137,7 @@ class TestGetSession:
         db_session.flush()
 
         exercise_session = ExerciseSession(
-            session_id=session.id,
-            exercise_id=sample_exercise.id
+            session_id=session.id, exercise_id=sample_exercise.id
         )
         db_session.add(exercise_session)
         db_session.flush()
@@ -144,7 +146,7 @@ class TestGetSession:
             exercise_session_id=exercise_session.id,
             weight=100.0,
             reps=10,
-            unit=UnitEnum.kg
+            unit=UnitEnum.kg,
         )
         db_session.add(set_item)
         db_session.commit()
@@ -169,10 +171,7 @@ class TestCreateSession:
 
     def test_create_session_basic(self, db_session: Session, sample_user: User):
         """Test creating a basic session without exercises."""
-        session_data = SessionCreate(
-            user_id=sample_user.id,
-            date=datetime.now()
-        )
+        session_data = SessionCreate(user_id=sample_user.id, date=datetime.now())
 
         result = session_service.create_session(session_data, db_session)
         assert result.id is not None
@@ -192,9 +191,9 @@ class TestCreateSession:
                     sets=[
                         SetCreate(weight=100.0, reps=10, unit=UnitEnum.kg),
                         SetCreate(weight=105.0, reps=8, unit=UnitEnum.kg),
-                    ]
+                    ],
                 )
-            ]
+            ],
         )
 
         result = session_service.create_session(session_data, db_session)
@@ -210,8 +209,14 @@ class TestCreateSession:
     ):
         """Test creating a session with multiple exercises."""
         # Create additional exercises
-        exercise1 = Exercise(name="Bench Press", category=CategoryEnum.CHEST, equipment=EquipmentEnum.BARBELL)
-        exercise2 = Exercise(name="Squat", category=CategoryEnum.LEGS, equipment=EquipmentEnum.BARBELL)
+        exercise1 = Exercise(
+            name="Bench Press",
+            category=CategoryEnum.CHEST,
+            equipment=EquipmentEnum.BARBELL,
+        )
+        exercise2 = Exercise(
+            name="Squat", category=CategoryEnum.LEGS, equipment=EquipmentEnum.BARBELL
+        )
         db_session.add_all([exercise1, exercise2])
         db_session.commit()
 
@@ -221,13 +226,13 @@ class TestCreateSession:
             exercise_sessions=[
                 ExerciseSessionCreate(
                     exercise_id=exercise1.id,
-                    sets=[SetCreate(weight=100.0, reps=10, unit=UnitEnum.kg)]
+                    sets=[SetCreate(weight=100.0, reps=10, unit=UnitEnum.kg)],
                 ),
                 ExerciseSessionCreate(
                     exercise_id=exercise2.id,
-                    sets=[SetCreate(weight=150.0, reps=5, unit=UnitEnum.kg)]
+                    sets=[SetCreate(weight=150.0, reps=5, unit=UnitEnum.kg)],
                 ),
-            ]
+            ],
         )
 
         result = session_service.create_session(session_data, db_session)
@@ -237,10 +242,7 @@ class TestCreateSession:
 
     def test_create_session_persisted(self, db_session: Session, sample_user: User):
         """Test that created session is persisted to database."""
-        session_data = SessionCreate(
-            user_id=sample_user.id,
-            date=datetime.now()
-        )
+        session_data = SessionCreate(user_id=sample_user.id, date=datetime.now())
 
         created_session = session_service.create_session(session_data, db_session)
 
@@ -337,8 +339,7 @@ class TestDeleteSession:
         db_session.flush()
 
         exercise_session = ExerciseSession(
-            session_id=session.id,
-            exercise_id=sample_exercise.id
+            session_id=session.id, exercise_id=sample_exercise.id
         )
         db_session.add(exercise_session)
         db_session.flush()
@@ -347,7 +348,7 @@ class TestDeleteSession:
             exercise_session_id=exercise_session.id,
             weight=100.0,
             reps=10,
-            unit=UnitEnum.kg
+            unit=UnitEnum.kg,
         )
         db_session.add(set_item)
         db_session.commit()

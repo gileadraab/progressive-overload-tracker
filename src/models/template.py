@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 
 from src.database.database import Base
 
+
 class Template(Base):
     __tablename__ = "templates"
 
@@ -11,4 +12,6 @@ class Template(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     user = relationship("User", back_populates="templates")
-    exercise_sessions = relationship("ExerciseSession", back_populates="template", cascade="all, delete-orphan")
+    exercise_sessions = relationship(
+        "ExerciseSession", back_populates="template", cascade="all, delete-orphan"
+    )

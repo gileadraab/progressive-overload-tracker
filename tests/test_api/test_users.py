@@ -19,7 +19,6 @@ class TestUsersAPI:
         assert data["username"] == "testuser123"
         assert data["name"] == "Test User"
         assert "id" in data
-        
 
     def test_create_user_without_display_name(self, client: TestClient):
         """Test creating user without display name (optional field)."""

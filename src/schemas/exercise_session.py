@@ -1,27 +1,44 @@
-from typing import Optional, List, TYPE_CHECKING
-from pydantic import BaseModel, Field, ConfigDict
+from typing import TYPE_CHECKING, List, Optional
+
+from pydantic import BaseModel, ConfigDict, Field
 
 if TYPE_CHECKING:
     from src.schemas.exercise import ExerciseResponse
     from src.schemas.session import SessionResponse
-    from src.schemas.template import TemplateResponse
     from src.schemas.set import SetResponse
+    from src.schemas.template import TemplateResponse
 
 
 class ExerciseSessionBase(BaseModel):
     """Base ExerciseSession schema with common fields."""
+
     exercise_id: int = Field(..., description="ID of the exercise")
-    session_id: Optional[int] = Field(None, description="ID of the session (if part of a workout)")
-    template_id: Optional[int] = Field(None, description="ID of the template (if part of a template)")
+    session_id: Optional[int] = Field(
+        None, description="ID of the session (if part of a workout)"
+    )
+    template_id: Optional[int] = Field(
+        None, description="ID of the template (if part of a template)"
+    )
 
 
-class ExerciseSessionCreate(ExerciseSessionBase):
+class ExerciseSessionCreate(BaseModel):
     """Schema for creating a new exercise session."""
-    sets: List["SetCreate"] = Field(default_factory=list, description="Sets for this exercise")
+
+    exercise_id: int = Field(..., description="ID of the exercise")
+    session_id: Optional[int] = Field(
+        None, description="ID of the session (if part of a workout)"
+    )
+    template_id: Optional[int] = Field(
+        None, description="ID of the template (if part of a template)"
+    )
+    sets: List["SetCreate"] = Field(
+        default_factory=list, description="Sets for this exercise"
+    )
 
 
 class ExerciseSessionUpdate(BaseModel):
     """Schema for updating an existing exercise session."""
+
     exercise_id: Optional[int] = Field(None)
     session_id: Optional[int] = Field(None)
     template_id: Optional[int] = Field(None)
@@ -29,6 +46,7 @@ class ExerciseSessionUpdate(BaseModel):
 
 class ExerciseSessionResponse(ExerciseSessionBase):
     """Schema for exercise session responses."""
+
     id: int
 
     model_config = ConfigDict(from_attributes=True)
@@ -36,6 +54,7 @@ class ExerciseSessionResponse(ExerciseSessionBase):
 
 class ExerciseSessionWithDetails(ExerciseSessionResponse):
     """Schema for exercise session with full details included."""
+
     exercise: Optional["ExerciseResponse"] = None
     session: Optional["SessionResponse"] = None
     template: Optional["TemplateResponse"] = None

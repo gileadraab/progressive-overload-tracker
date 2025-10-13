@@ -1,9 +1,10 @@
 from typing import List
+
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from src.database.database import get_db
-from src.schemas.user import UserCreate, UserUpdate, UserResponse
+from src.schemas.user import UserCreate, UserResponse, UserUpdate
 from src.services import user_service
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -12,7 +13,9 @@ router = APIRouter(prefix="/users", tags=["users"])
 @router.get("/", response_model=List[UserResponse])
 def list_users(
     skip: int = Query(0, ge=0, description="Number of records to skip"),
-    limit: int = Query(100, ge=1, le=1000, description="Maximum number of records to return"),
+    limit: int = Query(
+        100, ge=1, le=1000, description="Maximum number of records to return"
+    ),
     db: Session = Depends(get_db),
 ):
     """
