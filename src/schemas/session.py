@@ -1,32 +1,43 @@
 from datetime import datetime
-from typing import Optional, List, TYPE_CHECKING
-from pydantic import BaseModel, Field, ConfigDict
+from typing import TYPE_CHECKING, List, Optional
+
+from pydantic import BaseModel, ConfigDict, Field
 
 if TYPE_CHECKING:
-    from src.schemas.exercise_session import ExerciseSessionResponse, ExerciseSessionCreate, ExerciseSessionWithDetails
+    from src.schemas.exercise_session import (ExerciseSessionCreate,
+                                              ExerciseSessionResponse,
+                                              ExerciseSessionWithDetails)
     from src.schemas.set import SetResponse
 
 
 class SessionBase(BaseModel):
     """Base Session schema with common fields."""
+
     date: Optional[datetime] = Field(None, description="Session date and time")
-    user_id: Optional[int] = Field(None, description="ID of the user who owns this session")
+    user_id: Optional[int] = Field(
+        None, description="ID of the user who owns this session"
+    )
 
 
 class SessionCreate(SessionBase):
     """Schema for creating a new session."""
+
     user_id: int = Field(..., description="Required user ID for session creation")
-    exercise_sessions: List["ExerciseSessionCreate"] = Field(default_factory=list, description="Exercise sessions in this workout")
+    exercise_sessions: List["ExerciseSessionCreate"] = Field(
+        default_factory=list, description="Exercise sessions in this workout"
+    )
 
 
 class SessionUpdate(BaseModel):
     """Schema for updating an existing session."""
+
     date: Optional[datetime] = Field(None)
     user_id: Optional[int] = Field(None)
 
 
 class SessionResponse(SessionBase):
     """Schema for session responses."""
+
     id: int
     date: datetime
 
@@ -35,6 +46,7 @@ class SessionResponse(SessionBase):
 
 class SessionWithDetails(SessionResponse):
     """Schema for session with exercise sessions and sets included."""
+
     exercise_sessions: List["ExerciseSessionWithDetails"] = Field(default_factory=list)
     sets: List["SetResponse"] = Field(default_factory=list)
 
@@ -42,5 +54,9 @@ class SessionWithDetails(SessionResponse):
 
 
 # Import for forward reference resolution
-from src.schemas.exercise_session import ExerciseSessionCreate, ExerciseSessionResponse, ExerciseSessionWithDetails  # noqa: E402
-from src.schemas.set import SetResponse  # noqa: E402
+from src.schemas.exercise_session import (  # noqa: E402, F401, F811
+    ExerciseSessionCreate,
+    ExerciseSessionResponse,
+    ExerciseSessionWithDetails,
+)
+from src.schemas.set import SetResponse  # noqa: E402, F401, F811

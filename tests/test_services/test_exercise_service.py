@@ -1,14 +1,15 @@
-import pytest
 from datetime import datetime
+
+import pytest
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from src.models.exercise import Exercise, CategoryEnum, EquipmentEnum
-from src.models.user import User
-from src.models.session import Session as WorkoutSession
-from src.models.exercise_session import ExerciseSession
-from src.models.set import Set
 from src.models.enums import UnitEnum
+from src.models.exercise import CategoryEnum, EquipmentEnum, Exercise
+from src.models.exercise_session import ExerciseSession
+from src.models.session import Session as WorkoutSession
+from src.models.set import Set
+from src.models.user import User
 from src.schemas.exercise import ExerciseCreate, ExerciseUpdate
 from src.services import exercise_service
 
@@ -20,9 +21,21 @@ class TestGetExercises:
         """Test getting all exercises."""
         # Create sample exercises
         exercises = [
-            Exercise(name="Bench Press", category=CategoryEnum.CHEST, equipment=EquipmentEnum.BARBELL),
-            Exercise(name="Squat", category=CategoryEnum.LEGS, equipment=EquipmentEnum.BARBELL),
-            Exercise(name="Deadlift", category=CategoryEnum.BACK, equipment=EquipmentEnum.BARBELL),
+            Exercise(
+                name="Bench Press",
+                category=CategoryEnum.CHEST,
+                equipment=EquipmentEnum.BARBELL,
+            ),
+            Exercise(
+                name="Squat",
+                category=CategoryEnum.LEGS,
+                equipment=EquipmentEnum.BARBELL,
+            ),
+            Exercise(
+                name="Deadlift",
+                category=CategoryEnum.BACK,
+                equipment=EquipmentEnum.BARBELL,
+            ),
         ]
         for exercise in exercises:
             db_session.add(exercise)
@@ -42,7 +55,7 @@ class TestGetExercises:
             exercise = Exercise(
                 name=f"Exercise {i}",
                 category=CategoryEnum.CHEST,
-                equipment=EquipmentEnum.DUMBBELL
+                equipment=EquipmentEnum.DUMBBELL,
             )
             db_session.add(exercise)
         db_session.commit()
@@ -71,9 +84,21 @@ class TestSearchExercises:
     def test_search_by_name(self, db_session: Session):
         """Test searching exercises by name."""
         exercises = [
-            Exercise(name="Bench Press", category=CategoryEnum.CHEST, equipment=EquipmentEnum.BARBELL),
-            Exercise(name="Incline Bench Press", category=CategoryEnum.CHEST, equipment=EquipmentEnum.BARBELL),
-            Exercise(name="Squat", category=CategoryEnum.LEGS, equipment=EquipmentEnum.BARBELL),
+            Exercise(
+                name="Bench Press",
+                category=CategoryEnum.CHEST,
+                equipment=EquipmentEnum.BARBELL,
+            ),
+            Exercise(
+                name="Incline Bench Press",
+                category=CategoryEnum.CHEST,
+                equipment=EquipmentEnum.BARBELL,
+            ),
+            Exercise(
+                name="Squat",
+                category=CategoryEnum.LEGS,
+                equipment=EquipmentEnum.BARBELL,
+            ),
         ]
         for exercise in exercises:
             db_session.add(exercise)
@@ -87,9 +112,21 @@ class TestSearchExercises:
     def test_search_by_category(self, db_session: Session):
         """Test searching exercises by category."""
         exercises = [
-            Exercise(name="Bench Press", category=CategoryEnum.CHEST, equipment=EquipmentEnum.BARBELL),
-            Exercise(name="Push Up", category=CategoryEnum.CHEST, equipment=EquipmentEnum.BODYWEIGHT),
-            Exercise(name="Squat", category=CategoryEnum.LEGS, equipment=EquipmentEnum.BARBELL),
+            Exercise(
+                name="Bench Press",
+                category=CategoryEnum.CHEST,
+                equipment=EquipmentEnum.BARBELL,
+            ),
+            Exercise(
+                name="Push Up",
+                category=CategoryEnum.CHEST,
+                equipment=EquipmentEnum.BODYWEIGHT,
+            ),
+            Exercise(
+                name="Squat",
+                category=CategoryEnum.LEGS,
+                equipment=EquipmentEnum.BARBELL,
+            ),
         ]
         for exercise in exercises:
             db_session.add(exercise)
@@ -107,15 +144,19 @@ class TestSearchExercises:
                 name="Cable Fly",
                 category=CategoryEnum.CHEST,
                 equipment=EquipmentEnum.MACHINE,
-                subcategory="Upper Chest"
+                subcategory="Upper Chest",
             ),
             Exercise(
                 name="Incline Press",
                 category=CategoryEnum.CHEST,
                 equipment=EquipmentEnum.BARBELL,
-                subcategory="Upper Chest"
+                subcategory="Upper Chest",
             ),
-            Exercise(name="Flat Press", category=CategoryEnum.CHEST, equipment=EquipmentEnum.BARBELL),
+            Exercise(
+                name="Flat Press",
+                category=CategoryEnum.CHEST,
+                equipment=EquipmentEnum.BARBELL,
+            ),
         ]
         for exercise in exercises:
             db_session.add(exercise)
@@ -128,7 +169,11 @@ class TestSearchExercises:
 
     def test_search_case_insensitive(self, db_session: Session):
         """Test that search is case-insensitive."""
-        exercise = Exercise(name="Bench Press", category=CategoryEnum.CHEST, equipment=EquipmentEnum.BARBELL)
+        exercise = Exercise(
+            name="Bench Press",
+            category=CategoryEnum.CHEST,
+            equipment=EquipmentEnum.BARBELL,
+        )
         db_session.add(exercise)
         db_session.commit()
 
@@ -140,7 +185,11 @@ class TestSearchExercises:
 
     def test_search_no_results(self, db_session: Session):
         """Test searching with no matching results."""
-        exercise = Exercise(name="Bench Press", category=CategoryEnum.CHEST, equipment=EquipmentEnum.BARBELL)
+        exercise = Exercise(
+            name="Bench Press",
+            category=CategoryEnum.CHEST,
+            equipment=EquipmentEnum.BARBELL,
+        )
         db_session.add(exercise)
         db_session.commit()
 
@@ -153,7 +202,11 @@ class TestGetExercise:
 
     def test_get_existing_exercise(self, db_session: Session):
         """Test getting an existing exercise by ID."""
-        exercise = Exercise(name="Bench Press", category=CategoryEnum.CHEST, equipment=EquipmentEnum.BARBELL)
+        exercise = Exercise(
+            name="Bench Press",
+            category=CategoryEnum.CHEST,
+            equipment=EquipmentEnum.BARBELL,
+        )
         db_session.add(exercise)
         db_session.commit()
 
@@ -178,7 +231,7 @@ class TestCreateExercise:
         exercise_data = ExerciseCreate(
             name="Bench Press",
             category=CategoryEnum.CHEST,
-            equipment=EquipmentEnum.BARBELL
+            equipment=EquipmentEnum.BARBELL,
         )
 
         result = exercise_service.create_exercise(exercise_data, db_session)
@@ -194,7 +247,7 @@ class TestCreateExercise:
             name="Incline Bench Press",
             category=CategoryEnum.CHEST,
             equipment=EquipmentEnum.BARBELL,
-            subcategory="Upper Chest"
+            subcategory="Upper Chest",
         )
 
         result = exercise_service.create_exercise(exercise_data, db_session)
@@ -205,9 +258,7 @@ class TestCreateExercise:
     def test_create_exercise_persisted(self, db_session: Session):
         """Test that created exercise is persisted to database."""
         exercise_data = ExerciseCreate(
-            name="Squat",
-            category=CategoryEnum.LEGS,
-            equipment=EquipmentEnum.BARBELL
+            name="Squat", category=CategoryEnum.LEGS, equipment=EquipmentEnum.BARBELL
         )
 
         created_exercise = exercise_service.create_exercise(exercise_data, db_session)
@@ -223,7 +274,11 @@ class TestUpdateExercise:
 
     def test_update_exercise_name(self, db_session: Session):
         """Test updating exercise name."""
-        exercise = Exercise(name="Bench Press", category=CategoryEnum.CHEST, equipment=EquipmentEnum.BARBELL)
+        exercise = Exercise(
+            name="Bench Press",
+            category=CategoryEnum.CHEST,
+            equipment=EquipmentEnum.BARBELL,
+        )
         db_session.add(exercise)
         db_session.commit()
 
@@ -236,7 +291,11 @@ class TestUpdateExercise:
 
     def test_update_exercise_category(self, db_session: Session):
         """Test updating exercise category."""
-        exercise = Exercise(name="Pull Up", category=CategoryEnum.BACK, equipment=EquipmentEnum.BODYWEIGHT)
+        exercise = Exercise(
+            name="Pull Up",
+            category=CategoryEnum.BACK,
+            equipment=EquipmentEnum.BODYWEIGHT,
+        )
         db_session.add(exercise)
         db_session.commit()
 
@@ -249,14 +308,18 @@ class TestUpdateExercise:
 
     def test_update_exercise_multiple_fields(self, db_session: Session):
         """Test updating multiple fields at once."""
-        exercise = Exercise(name="Bench Press", category=CategoryEnum.CHEST, equipment=EquipmentEnum.BARBELL)
+        exercise = Exercise(
+            name="Bench Press",
+            category=CategoryEnum.CHEST,
+            equipment=EquipmentEnum.BARBELL,
+        )
         db_session.add(exercise)
         db_session.commit()
 
         update_data = ExerciseUpdate(
             name="Dumbbell Press",
             equipment=EquipmentEnum.DUMBBELL,
-            subcategory="Upper Chest"
+            subcategory="Upper Chest",
         )
         result = exercise_service.update_exercise(exercise.id, update_data, db_session)
 
@@ -280,7 +343,7 @@ class TestUpdateExercise:
             name="Bench Press",
             category=CategoryEnum.CHEST,
             equipment=EquipmentEnum.BARBELL,
-            subcategory="Middle Chest"
+            subcategory="Middle Chest",
         )
         db_session.add(exercise)
         db_session.commit()
@@ -300,7 +363,11 @@ class TestDeleteExercise:
 
     def test_delete_existing_exercise(self, db_session: Session):
         """Test deleting an existing exercise."""
-        exercise = Exercise(name="Bench Press", category=CategoryEnum.CHEST, equipment=EquipmentEnum.BARBELL)
+        exercise = Exercise(
+            name="Bench Press",
+            category=CategoryEnum.CHEST,
+            equipment=EquipmentEnum.BARBELL,
+        )
         db_session.add(exercise)
         db_session.commit()
         exercise_id = exercise.id
@@ -321,7 +388,11 @@ class TestDeleteExercise:
 
     def test_delete_exercise_returns_none(self, db_session: Session):
         """Test that delete_exercise returns None."""
-        exercise = Exercise(name="Bench Press", category=CategoryEnum.CHEST, equipment=EquipmentEnum.BARBELL)
+        exercise = Exercise(
+            name="Bench Press",
+            category=CategoryEnum.CHEST,
+            equipment=EquipmentEnum.BARBELL,
+        )
         db_session.add(exercise)
         db_session.commit()
 
@@ -360,7 +431,7 @@ class TestCalculateProgression:
         """Test progression increases weight when user hits 8+ reps."""
         recent_sets = [
             {"weight": 100, "reps": 10, "unit": "kg"},
-            {"weight": 100, "reps": 8, "unit": "kg"}
+            {"weight": 100, "reps": 8, "unit": "kg"},
         ]
 
         result = exercise_service.calculate_progression(recent_sets)
@@ -372,7 +443,7 @@ class TestCalculateProgression:
         """Test progression increases reps when below 8 reps."""
         recent_sets = [
             {"weight": 100, "reps": 6, "unit": "kg"},
-            {"weight": 100, "reps": 5, "unit": "kg"}
+            {"weight": 100, "reps": 5, "unit": "kg"},
         ]
 
         result = exercise_service.calculate_progression(recent_sets)
@@ -399,9 +470,7 @@ class TestCalculateProgression:
 
     def test_progression_with_stacks_unit(self):
         """Test progression uses 1 stack increment for stacks unit."""
-        recent_sets = [
-            {"weight": 10, "reps": 10, "unit": "stacks"}
-        ]
+        recent_sets = [{"weight": 10, "reps": 10, "unit": "stacks"}]
 
         result = exercise_service.calculate_progression(recent_sets)
         # Should increment by 1 stack, not 2.5
@@ -432,8 +501,12 @@ class TestGetExerciseHistory:
         db_session.commit()
 
         sets = [
-            Set(weight=100, reps=10, unit=UnitEnum.kg, exercise_session_id=ex_session.id),
-            Set(weight=100, reps=8, unit=UnitEnum.kg, exercise_session_id=ex_session.id)
+            Set(
+                weight=100, reps=10, unit=UnitEnum.kg, exercise_session_id=ex_session.id
+            ),
+            Set(
+                weight=100, reps=8, unit=UnitEnum.kg, exercise_session_id=ex_session.id
+            ),
         ]
         for s in sets:
             db_session.add(s)
@@ -464,7 +537,14 @@ class TestGetExerciseHistory:
         ex_session1 = ExerciseSession(exercise_id=exercise.id, session_id=session1.id)
         db_session.add(ex_session1)
         db_session.commit()
-        db_session.add(Set(weight=100, reps=10, unit=UnitEnum.kg, exercise_session_id=ex_session1.id))
+        db_session.add(
+            Set(
+                weight=100,
+                reps=10,
+                unit=UnitEnum.kg,
+                exercise_session_id=ex_session1.id,
+            )
+        )
 
         # Session 2: 120kg x 5 (higher 1RM)
         session2 = WorkoutSession(user_id=user.id, date=datetime(2025, 10, 1))
@@ -473,7 +553,11 @@ class TestGetExerciseHistory:
         ex_session2 = ExerciseSession(exercise_id=exercise.id, session_id=session2.id)
         db_session.add(ex_session2)
         db_session.commit()
-        db_session.add(Set(weight=120, reps=5, unit=UnitEnum.kg, exercise_session_id=ex_session2.id))
+        db_session.add(
+            Set(
+                weight=120, reps=5, unit=UnitEnum.kg, exercise_session_id=ex_session2.id
+            )
+        )
         db_session.commit()
 
         result = exercise_service.get_exercise_history(exercise.id, user.id, db_session)
@@ -499,7 +583,14 @@ class TestGetExerciseHistory:
             ex_session = ExerciseSession(exercise_id=exercise.id, session_id=session.id)
             db_session.add(ex_session)
             db_session.commit()
-            db_session.add(Set(weight=100 + i, reps=10, unit=UnitEnum.kg, exercise_session_id=ex_session.id))
+            db_session.add(
+                Set(
+                    weight=100 + i,
+                    reps=10,
+                    unit=UnitEnum.kg,
+                    exercise_session_id=ex_session.id,
+                )
+            )
         db_session.commit()
 
         result = exercise_service.get_exercise_history(exercise.id, user.id, db_session)
@@ -522,7 +613,11 @@ class TestGetExerciseHistory:
         ex_session = ExerciseSession(exercise_id=exercise.id, session_id=session.id)
         db_session.add(ex_session)
         db_session.commit()
-        db_session.add(Set(weight=100, reps=10, unit=UnitEnum.kg, exercise_session_id=ex_session.id))
+        db_session.add(
+            Set(
+                weight=100, reps=10, unit=UnitEnum.kg, exercise_session_id=ex_session.id
+            )
+        )
         db_session.commit()
 
         result = exercise_service.get_exercise_history(exercise.id, user.id, db_session)
@@ -571,7 +666,14 @@ class TestGetExerciseHistory:
         ex_session1 = ExerciseSession(exercise_id=exercise.id, session_id=session1.id)
         db_session.add(ex_session1)
         db_session.commit()
-        db_session.add(Set(weight=100, reps=10, unit=UnitEnum.kg, exercise_session_id=ex_session1.id))
+        db_session.add(
+            Set(
+                weight=100,
+                reps=10,
+                unit=UnitEnum.kg,
+                exercise_session_id=ex_session1.id,
+            )
+        )
 
         # User2's session
         session2 = WorkoutSession(user_id=user2.id, date=datetime(2025, 10, 2))
@@ -580,11 +682,20 @@ class TestGetExerciseHistory:
         ex_session2 = ExerciseSession(exercise_id=exercise.id, session_id=session2.id)
         db_session.add(ex_session2)
         db_session.commit()
-        db_session.add(Set(weight=200, reps=10, unit=UnitEnum.kg, exercise_session_id=ex_session2.id))
+        db_session.add(
+            Set(
+                weight=200,
+                reps=10,
+                unit=UnitEnum.kg,
+                exercise_session_id=ex_session2.id,
+            )
+        )
         db_session.commit()
 
         # Get user1's history
-        result = exercise_service.get_exercise_history(exercise.id, user1.id, db_session)
+        result = exercise_service.get_exercise_history(
+            exercise.id, user1.id, db_session
+        )
 
         # Should only see user1's 100kg, not user2's 200kg
         assert result["last_performed"]["max_weight"] == 100

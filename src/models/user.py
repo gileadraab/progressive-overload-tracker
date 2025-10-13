@@ -17,12 +17,8 @@ class User(Base):
 
     # Relationships
     sessions = relationship(
-        "Session",
-        back_populates="user",
-        cascade="all, delete-orphan"
+        "Session", back_populates="user", cascade="all, delete-orphan"
     )
     templates = relationship(
-        "Template",
-        back_populates="user",
-        cascade="all, delete-orphan"
+        "Template", back_populates="user", cascade="all, delete-orphan"
     )

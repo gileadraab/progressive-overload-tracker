@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship
 from src.database.database import Base
 from src.models.enums import UnitEnum
 
+
 class Set(Base):
     __tablename__ = "sets"
 
@@ -11,6 +12,8 @@ class Set(Base):
     weight = Column(Float, nullable=False)
     reps = Column(Integer, nullable=False)
     unit = Column(Enum(UnitEnum), nullable=False)
-    exercise_session_id = Column(Integer, ForeignKey("exercise_sessions.id"), nullable=False)
+    exercise_session_id = Column(
+        Integer, ForeignKey("exercise_sessions.id"), nullable=False
+    )
 
     exercise_session = relationship("ExerciseSession", back_populates="sets")

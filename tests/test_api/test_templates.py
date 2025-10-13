@@ -1,6 +1,5 @@
 """Integration tests for templates API endpoints."""
 
-import pytest
 from fastapi.testclient import TestClient
 
 
@@ -35,10 +34,16 @@ class TestTemplatesAPI:
 
         # Create exercises
         exercise1 = client.post(
-            "/exercises/", json={"name": "Bench Press", "category": "chest", "equipment": "barbell"}
+            "/exercises/",
+            json={"name": "Bench Press", "category": "chest", "equipment": "barbell"},
         ).json()
         exercise2 = client.post(
-            "/exercises/", json={"name": "Dumbbell Flyes", "category": "chest", "equipment": "dumbbell"}
+            "/exercises/",
+            json={
+                "name": "Dumbbell Flyes",
+                "category": "chest",
+                "equipment": "dumbbell",
+            },
         ).json()
 
         # Create template with exercises
@@ -147,7 +152,11 @@ class TestTemplatesAPI:
         # Create template
         template_response = client.post(
             "/templates/",
-            json={"user_id": user_id, "name": "Old Template Name", "exercise_sessions": []},
+            json={
+                "user_id": user_id,
+                "name": "Old Template Name",
+                "exercise_sessions": [],
+            },
         )
         template_id = template_response.json()["id"]
 
@@ -171,13 +180,18 @@ class TestTemplatesAPI:
         # Create template without exercises
         template_response = client.post(
             "/templates/",
-            json={"user_id": user_id, "name": "Empty Template", "exercise_sessions": []},
+            json={
+                "user_id": user_id,
+                "name": "Empty Template",
+                "exercise_sessions": [],
+            },
         )
         template_id = template_response.json()["id"]
 
         # Create exercise
         exercise = client.post(
-            "/exercises/", json={"name": "Squat", "category": "legs", "equipment": "barbell"}
+            "/exercises/",
+            json={"name": "Squat", "category": "legs", "equipment": "barbell"},
         ).json()
 
         # Update template to add exercise
@@ -239,15 +253,27 @@ class TestTemplatesAPI:
         # Create templates for each user
         client.post(
             "/templates/",
-            json={"user_id": user1["id"], "name": "User1 Template 1", "exercise_sessions": []},
+            json={
+                "user_id": user1["id"],
+                "name": "User1 Template 1",
+                "exercise_sessions": [],
+            },
         )
         client.post(
             "/templates/",
-            json={"user_id": user1["id"], "name": "User1 Template 2", "exercise_sessions": []},
+            json={
+                "user_id": user1["id"],
+                "name": "User1 Template 2",
+                "exercise_sessions": [],
+            },
         )
         client.post(
             "/templates/",
-            json={"user_id": user2["id"], "name": "User2 Template", "exercise_sessions": []},
+            json={
+                "user_id": user2["id"],
+                "name": "User2 Template",
+                "exercise_sessions": [],
+            },
         )
 
         # Filter by user1
@@ -287,14 +313,20 @@ class TestTemplatesAPI:
     def test_pagination_skip_limit(self, client: TestClient):
         """Test pagination with skip and limit."""
         # Create user
-        user_response = client.post("/users/", json={"username": "paginationtemplateuser"})
+        user_response = client.post(
+            "/users/", json={"username": "paginationtemplateuser"}
+        )
         user_id = user_response.json()["id"]
 
         # Create multiple templates
         for i in range(10):
             client.post(
                 "/templates/",
-                json={"user_id": user_id, "name": f"Template {i}", "exercise_sessions": []},
+                json={
+                    "user_id": user_id,
+                    "name": f"Template {i}",
+                    "exercise_sessions": [],
+                },
             )
 
         # Test pagination
@@ -354,10 +386,12 @@ class TestTemplatesAPI:
 
         # Create exercises
         exercise1 = client.post(
-            "/exercises/", json={"name": "Deadlift", "category": "back", "equipment": "barbell"}
+            "/exercises/",
+            json={"name": "Deadlift", "category": "back", "equipment": "barbell"},
         ).json()
         exercise2 = client.post(
-            "/exercises/", json={"name": "Row", "category": "back", "equipment": "dumbbell"}
+            "/exercises/",
+            json={"name": "Row", "category": "back", "equipment": "dumbbell"},
         ).json()
 
         # Create template with exercises
@@ -373,7 +407,9 @@ class TestTemplatesAPI:
         template_id = template_response.json()["id"]
 
         # Get session structure from template
-        response = client.get(f"/sessions/from-template/{template_id}?user_id={user_id}")
+        response = client.get(
+            f"/sessions/from-template/{template_id}?user_id={user_id}"
+        )
         assert response.status_code == 200
         data = response.json()
 
@@ -414,15 +450,27 @@ class TestTemplatesAPI:
     def test_create_template_from_session(self, client: TestClient):
         """Test creating a template from an existing session."""
         # Create user
-        user_response = client.post("/users/", json={"username": "sessiontotemplateuser"})
+        user_response = client.post(
+            "/users/", json={"username": "sessiontotemplateuser"}
+        )
         user_id = user_response.json()["id"]
 
         # Create exercises
         exercise1 = client.post(
-            "/exercises/", json={"name": "Overhead Press", "category": "shoulders", "equipment": "barbell"}
+            "/exercises/",
+            json={
+                "name": "Overhead Press",
+                "category": "shoulders",
+                "equipment": "barbell",
+            },
         ).json()
         exercise2 = client.post(
-            "/exercises/", json={"name": "Lateral Raise", "category": "shoulders", "equipment": "dumbbell"}
+            "/exercises/",
+            json={
+                "name": "Lateral Raise",
+                "category": "shoulders",
+                "equipment": "dumbbell",
+            },
         ).json()
 
         # Create session with exercises and sets
@@ -465,7 +513,9 @@ class TestTemplatesAPI:
     def test_create_template_from_session_invalid_session(self, client: TestClient):
         """Test creating template from non-existent session."""
         # Create user
-        user_response = client.post("/users/", json={"username": "badsessiontemplateuser"})
+        user_response = client.post(
+            "/users/", json={"username": "badsessiontemplateuser"}
+        )
         user_id = user_response.json()["id"]
 
         response = client.post(
@@ -492,14 +542,15 @@ class TestTemplatesAPI:
         assert response.status_code == 404
 
     def test_full_template_workflow(self, client: TestClient):
-        """Test complete workflow: create template → instantiate → create session → save as template."""
+        """Test complete workflow: create template → instantiate → session → save."""
         # Create user
         user_response = client.post("/users/", json={"username": "workflowuser"})
         user_id = user_response.json()["id"]
 
         # Create exercise
         exercise = client.post(
-            "/exercises/", json={"name": "Bicep Curl", "category": "arms", "equipment": "dumbbell"}
+            "/exercises/",
+            json={"name": "Bicep Curl", "category": "arms", "equipment": "dumbbell"},
         ).json()
 
         # 1. Create original template

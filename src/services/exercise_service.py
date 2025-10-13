@@ -1,11 +1,12 @@
-from typing import List, Optional, Dict, Any
 from datetime import datetime
-from sqlalchemy.orm import Session
-from fastapi import HTTPException, status
-from sqlalchemy import select, String, desc
+from typing import Any, Dict, List, Optional
 
-from src.models.exercise import Exercise
+from fastapi import HTTPException, status
+from sqlalchemy import String, cast as sql_cast, desc, select
+from sqlalchemy.orm import Session
+
 from src.models.enums import CategoryEnum, EquipmentEnum
+from src.models.exercise import Exercise
 from src.models.exercise_session import ExerciseSession
 from src.models.session import Session as WorkoutSession
 from src.models.set import Set
@@ -40,7 +41,7 @@ def get_exercises(
         query = query.where(Exercise.equipment == equipment)
 
     result = db.execute(query.offset(skip).limit(limit))
-    return result.scalars().all()
+    return list(result.scalars().all())
 
 
 def search_exercises(query: str, db: Session) -> List[Exercise]:
@@ -58,11 +59,11 @@ def search_exercises(query: str, db: Session) -> List[Exercise]:
     result = db.execute(
         select(Exercise).where(
             (Exercise.name.ilike(search))
-            | (Exercise.category.cast(String).ilike(search))
+            | (sql_cast(Exercise.category, String).ilike(search))
             | (Exercise.subcategory.ilike(search))
         )
     )
-    return result.scalars().all()
+    return list(result.scalars().all())
 
 
 def get_exercise(exercise_id: int, db: Session) -> Exercise:
@@ -179,7 +180,9 @@ def calculate_one_rep_max(weight: float, reps: int) -> float:
     return weight * (36 / (37 - reps))
 
 
-def calculate_progression(recent_sets: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+def calculate_progression(
+    recent_sets: List[Dict[str, Any]],
+) -> Optional[Dict[str, Any]]:
     """
     Calculate progressive overload suggestion based on recent performance.
 
@@ -204,13 +207,13 @@ def calculate_progression(recent_sets: List[Dict[str, Any]]) -> Optional[Dict[st
         return {
             "recommended_weight": best_set["weight"] + increment,
             "recommended_reps": best_set["reps"],
-            "rationale": f"You hit target reps - increase weight by {increment} {unit_label}"
+            "rationale": f"You hit target reps - increase weight by {increment} {unit_label}",
         }
     else:
         return {
             "recommended_weight": best_set["weight"],
             "recommended_reps": best_set["reps"] + 1,
-            "rationale": "Keep weight, aim for more reps"
+            "rationale": "Keep weight, aim for more reps",
         }
 
 
@@ -224,14 +227,15 @@ def get_exercise_history(exercise_id: int, user_id: int, db: Session) -> Dict[st
         db: The database session.
 
     Returns:
-        Dictionary containing last performed, personal best, recent sessions, and progression suggestion.
+        Dictionary containing last performed, personal best, recent sessions,
+        and progression suggestion.
     """
     # Verify exercise exists
     exercise = db.get(Exercise, exercise_id)
     if not exercise:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Exercise with id {exercise_id} not found"
+            detail=f"Exercise with id {exercise_id} not found",
         )
 
     # Get all sets for this exercise by this user, ordered by date (newest first)
@@ -253,7 +257,7 @@ def get_exercise_history(exercise_id: int, user_id: int, db: Session) -> Dict[st
             "last_performed": None,
             "personal_best": None,
             "recent_sessions": [],
-            "progression_suggestion": None
+            "progression_suggestion": None,
         }
 
     # Convert to list of dicts for easier processing
@@ -263,15 +267,14 @@ def get_exercise_history(exercise_id: int, user_id: int, db: Session) -> Dict[st
             "reps": set_obj.reps,
             "unit": set_obj.unit.value,
             "date": date,
-            "session_id": session_id
+            "session_id": session_id,
         }
         for set_obj, date, session_id in results
     ]
 
     # Find personal best (highest estimated 1RM)
     best_set = max(
-        all_sets,
-        key=lambda s: calculate_one_rep_max(s["weight"], s["reps"])
+        all_sets, key=lambda s: calculate_one_rep_max(s["weight"], s["reps"])
     )
 
     # Get last performed (most recent session)
@@ -279,7 +282,8 @@ def get_exercise_history(exercise_id: int, user_id: int, db: Session) -> Dict[st
     last_session_id = results[0][2]
     last_session_sets = [
         {"weight": s.weight, "reps": s.reps, "unit": s.unit.value}
-        for s, date, sid in results if sid == last_session_id
+        for s, date, sid in results
+        if sid == last_session_id
     ]
 
     # Get recent session summaries (last 5 sessions)
@@ -289,13 +293,11 @@ def get_exercise_history(exercise_id: int, user_id: int, db: Session) -> Dict[st
             session_summaries[session_id] = {
                 "session_id": session_id,
                 "date": date.isoformat() if isinstance(date, datetime) else str(date),
-                "sets": []
+                "sets": [],
             }
-        session_summaries[session_id]["sets"].append({
-            "weight": set_obj.weight,
-            "reps": set_obj.reps,
-            "unit": set_obj.unit.value
-        })
+        session_summaries[session_id]["sets"].append(
+            {"weight": set_obj.weight, "reps": set_obj.reps, "unit": set_obj.unit.value}
+        )
 
     recent_sessions = list(session_summaries.values())[:5]
     for session in recent_sessions:
@@ -313,18 +315,28 @@ def get_exercise_history(exercise_id: int, user_id: int, db: Session) -> Dict[st
         "exercise_id": exercise_id,
         "last_performed": {
             "session_id": last_session_id,
-            "date": last_session_date.isoformat() if isinstance(last_session_date, datetime) else str(last_session_date),
+            "date": (
+                last_session_date.isoformat()
+                if isinstance(last_session_date, datetime)
+                else str(last_session_date)
+            ),
             "sets": last_session_sets,
             "max_weight": max_weight,
-            "total_volume": total_volume
+            "total_volume": total_volume,
         },
         "personal_best": {
             "weight": best_set["weight"],
             "reps": best_set["reps"],
-            "date": best_set["date"].isoformat() if isinstance(best_set["date"], datetime) else str(best_set["date"]),
+            "date": (
+                best_set["date"].isoformat()
+                if isinstance(best_set["date"], datetime)
+                else str(best_set["date"])
+            ),
             "session_id": best_set["session_id"],
-            "estimated_1rm": calculate_one_rep_max(best_set["weight"], best_set["reps"])
+            "estimated_1rm": calculate_one_rep_max(
+                best_set["weight"], best_set["reps"]
+            ),
         },
         "recent_sessions": recent_sessions,
-        "progression_suggestion": suggestion
+        "progression_suggestion": suggestion,
     }

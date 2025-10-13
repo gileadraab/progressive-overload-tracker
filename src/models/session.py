@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, Integer, ForeignKey, func
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, func
 from sqlalchemy.orm import relationship
 
 from src.database.database import Base
@@ -16,7 +16,5 @@ class Session(Base):
     # Relationships
     user = relationship("User", back_populates="sessions")
     exercise_sessions = relationship(
-        "ExerciseSession",
-        back_populates="session",
-        cascade="all, delete-orphan"
+        "ExerciseSession", back_populates="session", cascade="all, delete-orphan"
     )

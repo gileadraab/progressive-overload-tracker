@@ -1,13 +1,13 @@
 from typing import List
-from sqlalchemy.orm import Session as DbSession, joinedload
+
 from fastapi import HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.orm import Session as DbSession
+from sqlalchemy.orm import joinedload
 
 from src.models.exercise_session import ExerciseSession
-from src.schemas.exercise_session import (
-    ExerciseSessionCreate,
-    ExerciseSessionUpdate
-)
+from src.schemas.exercise_session import (ExerciseSessionCreate,
+                                          ExerciseSessionUpdate)
 
 
 def get_exercise_sessions(
@@ -30,17 +30,15 @@ def get_exercise_sessions(
             joinedload(ExerciseSession.exercise),
             joinedload(ExerciseSession.session),
             joinedload(ExerciseSession.template),
-            joinedload(ExerciseSession.sets)
+            joinedload(ExerciseSession.sets),
         )
         .offset(skip)
         .limit(limit)
     )
-    return result.scalars().unique().all()
+    return list(result.scalars().unique().all())
 
 
-def get_exercise_session(
-    exercise_session_id: int, db: DbSession
-) -> ExerciseSession:
+def get_exercise_session(exercise_session_id: int, db: DbSession) -> ExerciseSession:
     """
     Get a single exercise session by its ID.
 
@@ -60,7 +58,7 @@ def get_exercise_session(
             joinedload(ExerciseSession.exercise),
             joinedload(ExerciseSession.session),
             joinedload(ExerciseSession.template),
-            joinedload(ExerciseSession.sets)
+            joinedload(ExerciseSession.sets),
         )
         .where(ExerciseSession.id == exercise_session_id)
     )
@@ -91,13 +89,13 @@ def create_exercise_session(
     db.add(db_exercise_session)
     db.commit()
     db.refresh(db_exercise_session)
-    return get_exercise_session(db_exercise_session.id, db)
+    return get_exercise_session(int(db_exercise_session.id), db)
 
 
 def update_exercise_session(
     exercise_session_id: int,
     exercise_session_data: ExerciseSessionUpdate,
-    db: DbSession
+    db: DbSession,
 ) -> ExerciseSession:
     """
     Update an existing exercise session in the database.

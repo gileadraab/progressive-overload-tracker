@@ -2,10 +2,10 @@ import pytest
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from src.models.exercise import CategoryEnum, EquipmentEnum, Exercise
+from src.models.exercise_session import ExerciseSession
 from src.models.template import Template as TemplateModel
 from src.models.user import User
-from src.models.exercise import Exercise, CategoryEnum, EquipmentEnum
-from src.models.exercise_session import ExerciseSession
 from src.schemas.template import TemplateCreate, TemplateUpdate
 from src.services import template_service
 
@@ -24,9 +24,17 @@ def sample_user(db_session: Session) -> User:
 def sample_exercises(db_session: Session) -> list[Exercise]:
     """Create sample exercises for testing."""
     exercises = [
-        Exercise(name="Bench Press", category=CategoryEnum.CHEST, equipment=EquipmentEnum.BARBELL),
-        Exercise(name="Squat", category=CategoryEnum.LEGS, equipment=EquipmentEnum.BARBELL),
-        Exercise(name="Deadlift", category=CategoryEnum.BACK, equipment=EquipmentEnum.BARBELL),
+        Exercise(
+            name="Bench Press",
+            category=CategoryEnum.CHEST,
+            equipment=EquipmentEnum.BARBELL,
+        ),
+        Exercise(
+            name="Squat", category=CategoryEnum.LEGS, equipment=EquipmentEnum.BARBELL
+        ),
+        Exercise(
+            name="Deadlift", category=CategoryEnum.BACK, equipment=EquipmentEnum.BARBELL
+        ),
     ]
     for exercise in exercises:
         db_session.add(exercise)
@@ -58,7 +66,9 @@ class TestGetTemplates:
         assert result[1].name == "Pull Day"
         assert result[2].name == "Leg Day"
 
-    def test_get_templates_with_pagination(self, db_session: Session, sample_user: User):
+    def test_get_templates_with_pagination(
+        self, db_session: Session, sample_user: User
+    ):
         """Test getting templates with pagination."""
         # Create 5 templates
         for i in range(5):
@@ -92,8 +102,7 @@ class TestGetTemplates:
         db_session.flush()
 
         exercise_session = ExerciseSession(
-            template_id=template.id,
-            exercise_id=sample_exercises[0].id
+            template_id=template.id, exercise_id=sample_exercises[0].id
         )
         db_session.add(exercise_session)
         db_session.commit()
@@ -128,8 +137,7 @@ class TestGetTemplate:
         db_session.flush()
 
         exercise_session = ExerciseSession(
-            template_id=template.id,
-            exercise_id=sample_exercises[0].id
+            template_id=template.id, exercise_id=sample_exercises[0].id
         )
         db_session.add(exercise_session)
         db_session.commit()
@@ -152,10 +160,7 @@ class TestCreateTemplate:
 
     def test_create_template_basic(self, db_session: Session, sample_user: User):
         """Test creating a basic template without exercises."""
-        template_data = TemplateCreate(
-            name="Push Day",
-            user_id=sample_user.id
-        )
+        template_data = TemplateCreate(name="Push Day", user_id=sample_user.id)
 
         result = template_service.create_template(template_data, db_session)
         assert result.id is not None
@@ -172,8 +177,8 @@ class TestCreateTemplate:
             user_id=sample_user.id,
             exercise_sessions=[
                 {"exercise_id": sample_exercises[0].id},
-                {"exercise_id": sample_exercises[1].id}
-            ]
+                {"exercise_id": sample_exercises[1].id},
+            ],
         )
 
         result = template_service.create_template(template_data, db_session)
@@ -192,8 +197,8 @@ class TestCreateTemplate:
             user_id=sample_user.id,
             exercise_sessions=[
                 {"exercise_id": sample_exercises[0].id},
-                {"exercise_id": sample_exercises[0].id}
-            ]
+                {"exercise_id": sample_exercises[0].id},
+            ],
         )
 
         result = template_service.create_template(template_data, db_session)
@@ -208,7 +213,7 @@ class TestCreateTemplate:
         template_data = TemplateCreate(
             name="Push Day",
             user_id=sample_user.id,
-            exercise_sessions=[{"exercise_id": 999}]
+            exercise_sessions=[{"exercise_id": 999}],
         )
 
         with pytest.raises(HTTPException) as exc_info:
@@ -218,10 +223,7 @@ class TestCreateTemplate:
 
     def test_create_template_persisted(self, db_session: Session, sample_user: User):
         """Test that created template is persisted to database."""
-        template_data = TemplateCreate(
-            name="Push Day",
-            user_id=sample_user.id
-        )
+        template_data = TemplateCreate(name="Push Day", user_id=sample_user.id)
 
         created_template = template_service.create_template(template_data, db_session)
 
@@ -264,7 +266,9 @@ class TestUpdateTemplate:
         assert result.user_id == user2.id
         assert result.name == "Push Day"  # Unchanged
 
-    def test_update_template_multiple_fields(self, db_session: Session, sample_user: User):
+    def test_update_template_multiple_fields(
+        self, db_session: Session, sample_user: User
+    ):
         """Test updating multiple fields at once."""
         template = TemplateModel(name="Push Day", user_id=sample_user.id)
         db_session.add(template)
@@ -329,8 +333,7 @@ class TestDeleteTemplate:
         db_session.flush()
 
         exercise_session = ExerciseSession(
-            template_id=template.id,
-            exercise_id=sample_exercises[0].id
+            template_id=template.id, exercise_id=sample_exercises[0].id
         )
         db_session.add(exercise_session)
         db_session.commit()

@@ -1,6 +1,5 @@
 """Integration tests for sessions API endpoints."""
 
-import pytest
 from fastapi.testclient import TestClient
 
 
@@ -33,7 +32,8 @@ class TestSessionsAPI:
 
         # Create exercise
         exercise_response = client.post(
-            "/exercises/", json={"name": "Squat", "category": "legs", "equipment": "barbell"}
+            "/exercises/",
+            json={"name": "Squat", "category": "legs", "equipment": "barbell"},
         )
         exercise_id = exercise_response.json()["id"]
 
@@ -67,10 +67,16 @@ class TestSessionsAPI:
 
         # Create exercises
         exercise1 = client.post(
-            "/exercises/", json={"name": "Bench Press", "category": "chest", "equipment": "barbell"}
+            "/exercises/",
+            json={"name": "Bench Press", "category": "chest", "equipment": "barbell"},
         ).json()
         exercise2 = client.post(
-            "/exercises/", json={"name": "Incline Press", "category": "chest", "equipment": "dumbbell"}
+            "/exercises/",
+            json={
+                "name": "Incline Press",
+                "category": "chest",
+                "equipment": "dumbbell",
+            },
         ).json()
 
         # Create session with multiple exercises
@@ -139,7 +145,9 @@ class TestSessionsAPI:
         user_response = client.post("/users/", json={"username": "getsessionuser"})
         user_id = user_response.json()["id"]
 
-        session_response = client.post("/sessions/", json={"user_id": user_id, "exercise_sessions": []})
+        session_response = client.post(
+            "/sessions/", json={"user_id": user_id, "exercise_sessions": []}
+        )
         session_id = session_response.json()["id"]
 
         # Get session
@@ -161,7 +169,9 @@ class TestSessionsAPI:
         user_id = user_response.json()["id"]
 
         # Create session
-        session_response = client.post("/sessions/", json={"user_id": user_id, "exercise_sessions": []})
+        session_response = client.post(
+            "/sessions/", json={"user_id": user_id, "exercise_sessions": []}
+        )
         session_id = session_response.json()["id"]
 
         # Update session (can change user_id if needed)
@@ -185,7 +195,9 @@ class TestSessionsAPI:
         user_response = client.post("/users/", json={"username": "deletesessionuser"})
         user_id = user_response.json()["id"]
 
-        session_response = client.post("/sessions/", json={"user_id": user_id, "exercise_sessions": []})
+        session_response = client.post(
+            "/sessions/", json={"user_id": user_id, "exercise_sessions": []}
+        )
         session_id = session_response.json()["id"]
 
         # Delete session
@@ -207,7 +219,8 @@ class TestSessionsAPI:
         user_response = client.post("/users/", json={"username": "cascadeuser"})
         user_id = user_response.json()["id"]
         exercise_response = client.post(
-            "/exercises/", json={"name": "Test Exercise", "category": "chest", "equipment": "barbell"}
+            "/exercises/",
+            json={"name": "Test Exercise", "category": "chest", "equipment": "barbell"},
         )
         exercise_id = exercise_response.json()["id"]
 
@@ -242,9 +255,15 @@ class TestSessionsAPI:
         user2 = client.post("/users/", json={"username": "filteruser2"}).json()
 
         # Create sessions for each user
-        client.post("/sessions/", json={"user_id": user1["id"], "exercise_sessions": []})
-        client.post("/sessions/", json={"user_id": user1["id"], "exercise_sessions": []})
-        client.post("/sessions/", json={"user_id": user2["id"], "exercise_sessions": []})
+        client.post(
+            "/sessions/", json={"user_id": user1["id"], "exercise_sessions": []}
+        )
+        client.post(
+            "/sessions/", json={"user_id": user1["id"], "exercise_sessions": []}
+        )
+        client.post(
+            "/sessions/", json={"user_id": user2["id"], "exercise_sessions": []}
+        )
 
         # Filter by user1
         response = client.get(f"/sessions/?user_id={user1['id']}")
@@ -261,7 +280,9 @@ class TestSessionsAPI:
 
         # Create multiple sessions
         for i in range(10):
-            client.post("/sessions/", json={"user_id": user_id, "exercise_sessions": []})
+            client.post(
+                "/sessions/", json={"user_id": user_id, "exercise_sessions": []}
+            )
 
         # Test pagination
         response = client.get("/sessions/?skip=5&limit=3")
@@ -275,7 +296,8 @@ class TestSessionsAPI:
         user_response = client.post("/users/", json={"username": "stacksuser"})
         user_id = user_response.json()["id"]
         exercise_response = client.post(
-            "/exercises/", json={"name": "Lat Pulldown", "category": "back", "equipment": "machine"}
+            "/exercises/",
+            json={"name": "Lat Pulldown", "category": "back", "equipment": "machine"},
         )
         exercise_id = exercise_response.json()["id"]
 
@@ -310,7 +332,8 @@ class TestSessionsAPI:
         user_response = client.post("/users/", json={"username": "templateuser"})
         user_id = user_response.json()["id"]
         exercise_response = client.post(
-            "/exercises/", json={"name": "Deadlift", "category": "legs", "equipment": "barbell"}
+            "/exercises/",
+            json={"name": "Deadlift", "category": "legs", "equipment": "barbell"},
         )
         exercise_id = exercise_response.json()["id"]
 
@@ -319,17 +342,16 @@ class TestSessionsAPI:
             "name": "Leg Day",
             "user_id": user_id,
             "exercise_sessions": [
-                {
-                    "exercise_id": exercise_id,
-                    "sets": []  # Templates have empty sets
-                }
+                {"exercise_id": exercise_id, "sets": []}  # Templates have empty sets
             ],
         }
         template_response = client.post("/templates/", json=template_data)
         template_id = template_response.json()["id"]
 
         # Get session from template
-        response = client.get(f"/sessions/from-template/{template_id}?user_id={user_id}")
+        response = client.get(
+            f"/sessions/from-template/{template_id}?user_id={user_id}"
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["user_id"] == user_id
@@ -342,7 +364,8 @@ class TestSessionsAPI:
         user_response = client.post("/users/", json={"username": "copyuser"})
         user_id = user_response.json()["id"]
         exercise_response = client.post(
-            "/exercises/", json={"name": "Bench Press", "category": "chest", "equipment": "barbell"}
+            "/exercises/",
+            json={"name": "Bench Press", "category": "chest", "equipment": "barbell"},
         )
         exercise_id = exercise_response.json()["id"]
 
@@ -383,10 +406,12 @@ class TestSessionsAPI:
         user_response = client.post("/users/", json={"username": "multicopyuser"})
         user_id = user_response.json()["id"]
         exercise1 = client.post(
-            "/exercises/", json={"name": "Squat", "category": "legs", "equipment": "barbell"}
+            "/exercises/",
+            json={"name": "Squat", "category": "legs", "equipment": "barbell"},
         ).json()
         exercise2 = client.post(
-            "/exercises/", json={"name": "Leg Press", "category": "legs", "equipment": "machine"}
+            "/exercises/",
+            json={"name": "Leg Press", "category": "legs", "equipment": "machine"},
         ).json()
 
         # Create session with multiple exercises
@@ -430,7 +455,12 @@ class TestSessionsAPI:
         user_response = client.post("/users/", json={"username": "progressuser"})
         user_id = user_response.json()["id"]
         exercise_response = client.post(
-            "/exercises/", json={"name": "Overhead Press", "category": "shoulders", "equipment": "barbell"}
+            "/exercises/",
+            json={
+                "name": "Overhead Press",
+                "category": "shoulders",
+                "equipment": "barbell",
+            },
         )
         exercise_id = exercise_response.json()["id"]
 
@@ -453,7 +483,9 @@ class TestSessionsAPI:
         week1_session_id = week1_response.json()["id"]
 
         # Week 2: Copy previous session
-        copy_response = client.get(f"/sessions/from-session/{week1_session_id}?user_id={user_id}")
+        copy_response = client.get(
+            f"/sessions/from-session/{week1_session_id}?user_id={user_id}"
+        )
         assert copy_response.status_code == 200
         week2_data = copy_response.json()
 
@@ -478,7 +510,8 @@ class TestSessionsAPI:
         user_response = client.post("/users/", json={"username": "modifyuser"})
         user_id = user_response.json()["id"]
         exercise_response = client.post(
-            "/exercises/", json={"name": "Pull-ups", "category": "back", "equipment": "bodyweight"}
+            "/exercises/",
+            json={"name": "Pull-ups", "category": "back", "equipment": "bodyweight"},
         )
         exercise_id = exercise_response.json()["id"]
 
@@ -500,12 +533,16 @@ class TestSessionsAPI:
         original_id = original_response.json()["id"]
 
         # Copy session
-        copy_response = client.get(f"/sessions/from-session/{original_id}?user_id={user_id}")
+        copy_response = client.get(
+            f"/sessions/from-session/{original_id}?user_id={user_id}"
+        )
         copied_data = copy_response.json()
 
         # Modify: add a set and increase reps
         copied_data["exercise_sessions"][0]["sets"][0]["reps"] = 12
-        copied_data["exercise_sessions"][0]["sets"].append({"weight": 0.0, "reps": 10, "unit": "kg"})
+        copied_data["exercise_sessions"][0]["sets"].append(
+            {"weight": 0.0, "reps": 10, "unit": "kg"}
+        )
 
         # Create new session
         new_response = client.post("/sessions/", json=copied_data)
@@ -535,7 +572,8 @@ class TestSessionsAPI:
 
         # Create exercise
         exercise_response = client.post(
-            "/exercises/", json={"name": "Bicep Curl", "category": "arms", "equipment": "dumbbell"}
+            "/exercises/",
+            json={"name": "Bicep Curl", "category": "arms", "equipment": "dumbbell"},
         )
         exercise_id = exercise_response.json()["id"]
 
@@ -553,7 +591,9 @@ class TestSessionsAPI:
         session_id = session_response.json()["id"]
 
         # Copy session for user2
-        copy_response = client.get(f"/sessions/from-session/{session_id}?user_id={user2_id}")
+        copy_response = client.get(
+            f"/sessions/from-session/{session_id}?user_id={user2_id}"
+        )
         assert copy_response.status_code == 200
         copied_data = copy_response.json()
 

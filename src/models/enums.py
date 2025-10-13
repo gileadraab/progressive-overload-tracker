@@ -1,9 +1,11 @@
 from enum import Enum
 
+
 # Unit options
 class UnitEnum(str, Enum):
     kg = "kg"
     stacks = "stacks"
+
 
 # Equipment options
 class EquipmentEnum(str, Enum):
@@ -13,6 +15,7 @@ class EquipmentEnum(str, Enum):
     BODYWEIGHT = "bodyweight"
     KETTLEBELL = "kettlebell"
     RESISTANCE_BAND = "resistance_band"
+
 
 # Category options
 class CategoryEnum(str, Enum):

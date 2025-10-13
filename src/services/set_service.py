@@ -1,7 +1,8 @@
 from typing import List
-from sqlalchemy.orm import Session as DbSession
+
 from fastapi import HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.orm import Session as DbSession
 
 from src.models.set import Set as SetModel
 from src.schemas.set import SetCreate, SetUpdate
@@ -20,7 +21,7 @@ def get_sets(db: DbSession, skip: int = 0, limit: int = 100) -> List[SetModel]:
         A list of all sets.
     """
     result = db.execute(select(SetModel).offset(skip).limit(limit))
-    return result.scalars().all()
+    return list(result.scalars().all())
 
 
 def get_set(set_id: int, db: DbSession) -> SetModel:

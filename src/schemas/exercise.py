@@ -1,22 +1,20 @@
-from typing import Optional, List
-from pydantic import BaseModel, Field, HttpUrl, ConfigDict
-from src.models.enums import EquipmentEnum, CategoryEnum, UnitEnum
+from typing import List, Optional
+
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl
+
+from src.models.enums import CategoryEnum, EquipmentEnum
 
 
 class ExerciseBase(BaseModel):
-    name: str = Field(
-        ...,
-        json_schema_extra={"example": "Bench Press"}
-    )
+    name: str = Field(..., json_schema_extra={"example": "Bench Press"})
     category: CategoryEnum
     subcategory: Optional[str] = Field(
-        None,
-        json_schema_extra={"example": "Upper Chest"}
+        None, json_schema_extra={"example": "Upper Chest"}
     )
     equipment: Optional[EquipmentEnum] = None
     image_url: Optional[HttpUrl] = Field(
         None,
-        json_schema_extra={"example": "https://example.com/images/bench_press.jpg"}
+        json_schema_extra={"example": "https://example.com/images/bench_press.jpg"},
     )
 
 

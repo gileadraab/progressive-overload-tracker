@@ -1,13 +1,15 @@
-import pytest
 from datetime import datetime
+
+import pytest
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from src.models.set import Set as SetModel, UnitEnum
-from src.models.user import User
-from src.models.session import Session as SessionModel
-from src.models.exercise import Exercise, CategoryEnum, EquipmentEnum
+from src.models.exercise import CategoryEnum, EquipmentEnum, Exercise
 from src.models.exercise_session import ExerciseSession
+from src.models.session import Session as SessionModel
+from src.models.set import Set as SetModel
+from src.models.set import UnitEnum
+from src.models.user import User
 from src.schemas.set import SetCreate, SetUpdate
 from src.services import set_service
 
@@ -27,15 +29,18 @@ def sample_session(db_session: Session) -> SessionModel:
 
 
 @pytest.fixture
-def sample_exercise_session(db_session: Session, sample_session: SessionModel) -> ExerciseSession:
+def sample_exercise_session(
+    db_session: Session, sample_session: SessionModel
+) -> ExerciseSession:
     """Create a sample exercise session for testing."""
-    exercise = Exercise(name="Bench Press", category=CategoryEnum.CHEST, equipment=EquipmentEnum.BARBELL)
+    exercise = Exercise(
+        name="Bench Press", category=CategoryEnum.CHEST, equipment=EquipmentEnum.BARBELL
+    )
     db_session.add(exercise)
     db_session.flush()
 
     exercise_session = ExerciseSession(
-        session_id=sample_session.id,
-        exercise_id=exercise.id
+        session_id=sample_session.id, exercise_id=exercise.id
     )
     db_session.add(exercise_session)
     db_session.commit()
@@ -46,7 +51,12 @@ def sample_exercise_session(db_session: Session, sample_session: SessionModel) -
 class TestGetSets:
     """Test suite for get_sets function."""
 
-    def test_get_all_sets(self, db_session: Session, sample_session: SessionModel, sample_exercise_session: ExerciseSession):
+    def test_get_all_sets(
+        self,
+        db_session: Session,
+        sample_session: SessionModel,
+        sample_exercise_session: ExerciseSession,
+    ):
         """Test getting all sets."""
         # Create sample sets
         sets = [
@@ -54,19 +64,19 @@ class TestGetSets:
                 exercise_session_id=sample_exercise_session.id,
                 weight=100.0,
                 reps=10,
-                unit=UnitEnum.kg
+                unit=UnitEnum.kg,
             ),
             SetModel(
                 exercise_session_id=sample_exercise_session.id,
                 weight=105.0,
                 reps=8,
-                unit=UnitEnum.kg
+                unit=UnitEnum.kg,
             ),
             SetModel(
                 exercise_session_id=sample_exercise_session.id,
                 weight=110.0,
                 reps=6,
-                unit=UnitEnum.kg
+                unit=UnitEnum.kg,
             ),
         ]
         for set_item in sets:
@@ -80,7 +90,12 @@ class TestGetSets:
         assert result[1].weight == 105.0
         assert result[2].weight == 110.0
 
-    def test_get_sets_with_pagination(self, db_session: Session, sample_session: SessionModel, sample_exercise_session: ExerciseSession):
+    def test_get_sets_with_pagination(
+        self,
+        db_session: Session,
+        sample_session: SessionModel,
+        sample_exercise_session: ExerciseSession,
+    ):
         """Test getting sets with pagination."""
         # Create 5 sets
         for i in range(5):
@@ -88,7 +103,7 @@ class TestGetSets:
                 exercise_session_id=sample_exercise_session.id,
                 weight=100.0 + i,
                 reps=10,
-                unit=UnitEnum.kg
+                unit=UnitEnum.kg,
             )
             db_session.add(set_item)
         db_session.commit()
@@ -114,13 +129,18 @@ class TestGetSets:
 class TestGetSet:
     """Test suite for get_set function."""
 
-    def test_get_existing_set(self, db_session: Session, sample_session: SessionModel, sample_exercise_session: ExerciseSession):
+    def test_get_existing_set(
+        self,
+        db_session: Session,
+        sample_session: SessionModel,
+        sample_exercise_session: ExerciseSession,
+    ):
         """Test getting an existing set by ID."""
         set_item = SetModel(
             exercise_session_id=sample_exercise_session.id,
             weight=100.0,
             reps=10,
-            unit=UnitEnum.kg
+            unit=UnitEnum.kg,
         )
         db_session.add(set_item)
         db_session.commit()
@@ -142,13 +162,18 @@ class TestGetSet:
 class TestCreateSet:
     """Test suite for create_set function."""
 
-    def test_create_set_basic(self, db_session: Session, sample_session: SessionModel, sample_exercise_session: ExerciseSession):
+    def test_create_set_basic(
+        self,
+        db_session: Session,
+        sample_session: SessionModel,
+        sample_exercise_session: ExerciseSession,
+    ):
         """Test creating a basic set."""
         set_data = SetCreate(
             exercise_session_id=sample_exercise_session.id,
             weight=100.0,
             reps=10,
-            unit=UnitEnum.kg
+            unit=UnitEnum.kg,
         )
 
         result = set_service.create_set(set_data, db_session)
@@ -157,26 +182,36 @@ class TestCreateSet:
         assert result.reps == 10
         assert result.unit == UnitEnum.kg
 
-    def test_create_set_with_stacks_unit(self, db_session: Session, sample_session: SessionModel, sample_exercise_session: ExerciseSession):
+    def test_create_set_with_stacks_unit(
+        self,
+        db_session: Session,
+        sample_session: SessionModel,
+        sample_exercise_session: ExerciseSession,
+    ):
         """Test creating a set with STACKS unit."""
         set_data = SetCreate(
             exercise_session_id=sample_exercise_session.id,
             weight=5.0,
             reps=12,
-            unit=UnitEnum.stacks
+            unit=UnitEnum.stacks,
         )
 
         result = set_service.create_set(set_data, db_session)
         assert result.unit == UnitEnum.stacks
         assert result.weight == 5.0
 
-    def test_create_set_persisted(self, db_session: Session, sample_session: SessionModel, sample_exercise_session: ExerciseSession):
+    def test_create_set_persisted(
+        self,
+        db_session: Session,
+        sample_session: SessionModel,
+        sample_exercise_session: ExerciseSession,
+    ):
         """Test that created set is persisted to database."""
         set_data = SetCreate(
             exercise_session_id=sample_exercise_session.id,
             weight=100.0,
             reps=10,
-            unit=UnitEnum.kg
+            unit=UnitEnum.kg,
         )
 
         created_set = set_service.create_set(set_data, db_session)
@@ -190,13 +225,18 @@ class TestCreateSet:
 class TestUpdateSet:
     """Test suite for update_set function."""
 
-    def test_update_set_weight(self, db_session: Session, sample_session: SessionModel, sample_exercise_session: ExerciseSession):
+    def test_update_set_weight(
+        self,
+        db_session: Session,
+        sample_session: SessionModel,
+        sample_exercise_session: ExerciseSession,
+    ):
         """Test updating set weight."""
         set_item = SetModel(
             exercise_session_id=sample_exercise_session.id,
             weight=100.0,
             reps=10,
-            unit=UnitEnum.kg
+            unit=UnitEnum.kg,
         )
         db_session.add(set_item)
         db_session.commit()
@@ -208,13 +248,18 @@ class TestUpdateSet:
         assert result.weight == 105.0
         assert result.reps == 10  # Unchanged
 
-    def test_update_set_reps(self, db_session: Session, sample_session: SessionModel, sample_exercise_session: ExerciseSession):
+    def test_update_set_reps(
+        self,
+        db_session: Session,
+        sample_session: SessionModel,
+        sample_exercise_session: ExerciseSession,
+    ):
         """Test updating set reps."""
         set_item = SetModel(
             exercise_session_id=sample_exercise_session.id,
             weight=100.0,
             reps=10,
-            unit=UnitEnum.kg
+            unit=UnitEnum.kg,
         )
         db_session.add(set_item)
         db_session.commit()
@@ -225,13 +270,18 @@ class TestUpdateSet:
         assert result.reps == 12
         assert result.weight == 100.0  # Unchanged
 
-    def test_update_set_unit(self, db_session: Session, sample_session: SessionModel, sample_exercise_session: ExerciseSession):
+    def test_update_set_unit(
+        self,
+        db_session: Session,
+        sample_session: SessionModel,
+        sample_exercise_session: ExerciseSession,
+    ):
         """Test updating set unit."""
         set_item = SetModel(
             exercise_session_id=sample_exercise_session.id,
             weight=100.0,
             reps=10,
-            unit=UnitEnum.kg
+            unit=UnitEnum.kg,
         )
         db_session.add(set_item)
         db_session.commit()
@@ -242,13 +292,18 @@ class TestUpdateSet:
         assert result.unit == UnitEnum.stacks
         assert result.weight == 100.0  # Unchanged
 
-    def test_update_set_multiple_fields(self, db_session: Session, sample_session: SessionModel, sample_exercise_session: ExerciseSession):
+    def test_update_set_multiple_fields(
+        self,
+        db_session: Session,
+        sample_session: SessionModel,
+        sample_exercise_session: ExerciseSession,
+    ):
         """Test updating multiple fields at once."""
         set_item = SetModel(
             exercise_session_id=sample_exercise_session.id,
             weight=100.0,
             reps=10,
-            unit=UnitEnum.kg
+            unit=UnitEnum.kg,
         )
         db_session.add(set_item)
         db_session.commit()
@@ -269,13 +324,18 @@ class TestUpdateSet:
         assert exc_info.value.status_code == 404
         assert "not found" in exc_info.value.detail.lower()
 
-    def test_update_set_partial(self, db_session: Session, sample_session: SessionModel, sample_exercise_session: ExerciseSession):
+    def test_update_set_partial(
+        self,
+        db_session: Session,
+        sample_session: SessionModel,
+        sample_exercise_session: ExerciseSession,
+    ):
         """Test partial update with exclude_unset."""
         set_item = SetModel(
             exercise_session_id=sample_exercise_session.id,
             weight=100.0,
             reps=10,
-            unit=UnitEnum.kg
+            unit=UnitEnum.kg,
         )
         db_session.add(set_item)
         db_session.commit()
@@ -292,13 +352,18 @@ class TestUpdateSet:
 class TestDeleteSet:
     """Test suite for delete_set function."""
 
-    def test_delete_existing_set(self, db_session: Session, sample_session: SessionModel, sample_exercise_session: ExerciseSession):
+    def test_delete_existing_set(
+        self,
+        db_session: Session,
+        sample_session: SessionModel,
+        sample_exercise_session: ExerciseSession,
+    ):
         """Test deleting an existing set."""
         set_item = SetModel(
             exercise_session_id=sample_exercise_session.id,
             weight=100.0,
             reps=10,
-            unit=UnitEnum.kg
+            unit=UnitEnum.kg,
         )
         db_session.add(set_item)
         db_session.commit()
@@ -318,13 +383,18 @@ class TestDeleteSet:
         assert exc_info.value.status_code == 404
         assert "not found" in exc_info.value.detail.lower()
 
-    def test_delete_set_returns_none(self, db_session: Session, sample_session: SessionModel, sample_exercise_session: ExerciseSession):
+    def test_delete_set_returns_none(
+        self,
+        db_session: Session,
+        sample_session: SessionModel,
+        sample_exercise_session: ExerciseSession,
+    ):
         """Test that delete_set returns None."""
         set_item = SetModel(
             exercise_session_id=sample_exercise_session.id,
             weight=100.0,
             reps=10,
-            unit=UnitEnum.kg
+            unit=UnitEnum.kg,
         )
         db_session.add(set_item)
         db_session.commit()

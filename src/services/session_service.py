@@ -1,14 +1,18 @@
 from typing import List, Optional
-from sqlalchemy.orm import Session as DbSession, joinedload
+
 from fastapi import HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.orm import Session as DbSession
+from sqlalchemy.orm import joinedload
 
-from src.models.session import Session as SessionModel
+from src.models.exercise import Exercise
 from src.models.exercise_session import ExerciseSession
+from src.models.session import Session as SessionModel
 from src.models.set import Set as SetModel
 from src.models.user import User
-from src.models.exercise import Exercise
+from src.schemas.exercise_session import ExerciseSessionCreate
 from src.schemas.session import SessionCreate, SessionUpdate
+from src.schemas.set import SetCreate
 
 
 def get_sessions(
@@ -31,17 +35,16 @@ def get_sessions(
     """
     query = select(SessionModel).options(
         joinedload(SessionModel.exercise_sessions).options(
-            joinedload(ExerciseSession.exercise),
-            joinedload(ExerciseSession.sets)
+            joinedload(ExerciseSession.exercise), joinedload(ExerciseSession.sets)
         ),
-        joinedload(SessionModel.user)
+        joinedload(SessionModel.user),
     )
 
     if user_id:
         query = query.where(SessionModel.user_id == user_id)
 
     result = db.execute(query.offset(skip).limit(limit))
-    return result.scalars().unique().all()
+    return list(result.scalars().unique().all())
 
 
 def get_session(session_id: int, db: DbSession) -> SessionModel:
@@ -62,10 +65,9 @@ def get_session(session_id: int, db: DbSession) -> SessionModel:
         select(SessionModel)
         .options(
             joinedload(SessionModel.exercise_sessions).options(
-                joinedload(ExerciseSession.exercise),
-                joinedload(ExerciseSession.sets)
+                joinedload(ExerciseSession.exercise), joinedload(ExerciseSession.sets)
             ),
-            joinedload(SessionModel.user)
+            joinedload(SessionModel.user),
         )
         .where(SessionModel.id == session_id)
     )
@@ -96,23 +98,23 @@ def create_session(session_data: SessionCreate, db: DbSession) -> SessionModel:
     session_dict = session_data.model_dump()
 
     # Validate user exists
-    user = db.get(User, session_dict['user_id'])
+    user = db.get(User, session_dict["user_id"])
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User with id {session_dict['user_id']} not found"
+            detail=f"User with id {session_dict['user_id']} not found",
         )
 
     # Extract nested exercise_sessions if present
-    exercise_sessions_data = session_dict.pop('exercise_sessions', [])
+    exercise_sessions_data = session_dict.pop("exercise_sessions", [])
 
     # Validate all exercises exist
     for es_data in exercise_sessions_data:
-        exercise = db.get(Exercise, es_data['exercise_id'])
+        exercise = db.get(Exercise, es_data["exercise_id"])
         if not exercise:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Exercise with id {es_data['exercise_id']} not found"
+                detail=f"Exercise with id {es_data['exercise_id']} not found",
             )
 
     # Create the session
@@ -120,7 +122,7 @@ def create_session(session_data: SessionCreate, db: DbSession) -> SessionModel:
 
     # Add nested exercise sessions and sets
     for es_data in exercise_sessions_data:
-        sets_data = es_data.pop('sets', [])
+        sets_data = es_data.pop("sets", [])
         db_es = ExerciseSession(**es_data)
 
         for set_data in sets_data:
@@ -133,7 +135,7 @@ def create_session(session_data: SessionCreate, db: DbSession) -> SessionModel:
     db.commit()
     db.refresh(db_session)
 
-    return get_session(db_session.id, db)
+    return get_session(int(db_session.id), db)
 
 
 def update_session(
@@ -190,7 +192,9 @@ def delete_session(session_id: int, db: DbSession) -> None:
     db.commit()
 
 
-def get_session_as_template(session_id: int, user_id: int, db: DbSession) -> SessionCreate:
+def get_session_as_template(
+    session_id: int, user_id: int, db: DbSession
+) -> SessionCreate:
     """
     Get a session structure that can be used to create a new session (copy workflow).
 
@@ -215,23 +219,29 @@ def get_session_as_template(session_id: int, user_id: int, db: DbSession) -> Ses
     exercise_sessions_data = []
     for es in source_session.exercise_sessions:
         # Build sets list for this exercise
-        sets_data = []
-        for set_obj in es.sets:
-            sets_data.append({
-                "weight": set_obj.weight,
-                "reps": set_obj.reps,
-                "unit": set_obj.unit
-            })
+        sets_data = [
+            SetCreate(
+                weight=set_obj.weight,
+                reps=set_obj.reps,
+                unit=set_obj.unit,
+                exercise_session_id=None,
+            )
+            for set_obj in es.sets
+        ]
 
         # Build exercise_session
-        exercise_sessions_data.append({
-            "exercise_id": es.exercise_id,
-            "sets": sets_data
-        })
+        exercise_sessions_data.append(
+            ExerciseSessionCreate(
+                exercise_id=es.exercise_id,
+                session_id=None,
+                template_id=None,
+                sets=sets_data,
+            )
+        )
 
     # Return SessionCreate with current user_id and copied exercises/sets
     return SessionCreate(
         user_id=user_id,
         date=None,  # Will be set to current time when created
-        exercise_sessions=exercise_sessions_data
+        exercise_sessions=exercise_sessions_data,
     )

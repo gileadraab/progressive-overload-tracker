@@ -1,5 +1,5 @@
 from src.database.database import Base
-from src.models.enums import UnitEnum, EquipmentEnum, CategoryEnum
+from src.models.enums import CategoryEnum, EquipmentEnum, UnitEnum
 from src.models.exercise import Exercise
 from src.models.exercise_session import ExerciseSession
 from src.models.session import Session
@@ -17,5 +17,5 @@ __all__ = [
     "UnitEnum",
     "EquipmentEnum",
     "CategoryEnum",
-    "User"
+    "User",
 ]
