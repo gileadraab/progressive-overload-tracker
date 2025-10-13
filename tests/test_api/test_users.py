@@ -192,23 +192,3 @@ class TestUsersAPI:
         response = client.post("/users/", json=user_data)
         # Should succeed unless there's a length constraint
         assert response.status_code in [201, 422]
-
-    @pytest.mark.skip(reason="UserWithSessions response not yet implemented")
-    def test_get_user_with_sessions(self, client: TestClient):
-        """Test retrieving user includes their sessions."""
-        # Create user
-        user_data = {"username": "userwithsessions2"}
-        user_response = client.post("/users/", json=user_data)
-        user_id = user_response.json()["id"]
-
-        # Create sessions for user
-        for i in range(3):
-            session_data = {"user_id": user_id, "exercises": []}
-            client.post("/sessions/", json=session_data)
-
-        # Get user
-        response = client.get(f"/users/{user_id}")
-        assert response.status_code == 200
-        data = response.json()
-        assert "sessions" in data
-        assert len(data["sessions"]) == 3
