@@ -239,6 +239,7 @@ def get_exercise_history(exercise_id: int, user_id: int, db: Session) -> Dict[st
         )
 
     # Get all sets for this exercise by this user, ordered by date (newest first)
+    # Secondary sort by ID ensures deterministic ordering when dates are equal
     query = (
         select(Set, WorkoutSession.date, WorkoutSession.id)
         .join(ExerciseSession, Set.exercise_session_id == ExerciseSession.id)
@@ -246,7 +247,7 @@ def get_exercise_history(exercise_id: int, user_id: int, db: Session) -> Dict[st
         .where(ExerciseSession.exercise_id == exercise_id)
         .where(WorkoutSession.user_id == user_id)
         .where(WorkoutSession.id.isnot(None))  # Only actual sessions, not templates
-        .order_by(desc(WorkoutSession.date))
+        .order_by(desc(WorkoutSession.date), desc(WorkoutSession.id))
     )
 
     results = db.execute(query).all()
