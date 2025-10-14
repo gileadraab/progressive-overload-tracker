@@ -79,7 +79,7 @@ def client(db_session) -> Generator[TestClient, None, None]:
 @pytest.fixture
 def sample_user(db_session) -> User:
     """Create a sample user for testing."""
-    user = User(username="testuser", display_name="Test User")
+    user = User(username="testuser", name="Test User")
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
@@ -142,7 +142,7 @@ def sample_exercise_session(
 ) -> ExerciseSession:
     """Create a sample exercise session for testing."""
     exercise_session = ExerciseSession(
-        session_id=sample_session.id, exercise_id=sample_exercise.id, order=1
+        session_id=sample_session.id, exercise_id=sample_exercise.id
     )
     db_session.add(exercise_session)
     db_session.commit()
@@ -159,7 +159,6 @@ def sample_set(db_session, sample_session, sample_exercise_session) -> Set:
         weight=100.0,
         reps=10,
         unit=UnitEnum.KG,
-        order=1,
     )
     db_session.add(set_record)
     db_session.commit()
@@ -181,7 +180,7 @@ def sample_workout_with_exercises(
 
     # Add first exercise (Bench Press)
     ex_session_1 = ExerciseSession(
-        session_id=session.id, exercise_id=sample_exercise.id, order=1
+        session_id=session.id, exercise_id=sample_exercise.id
     )
     db_session.add(ex_session_1)
     db_session.flush()
@@ -194,13 +193,12 @@ def sample_workout_with_exercises(
             weight=100.0 + (i * 10),
             reps=10 - i,
             unit=UnitEnum.KG,
-            order=i + 1,
         )
         db_session.add(set_record)
 
     # Add second exercise (Dumbbell Curl)
     ex_session_2 = ExerciseSession(
-        session_id=session.id, exercise_id=sample_exercise_dumbbell.id, order=2
+        session_id=session.id, exercise_id=sample_exercise_dumbbell.id
     )
     db_session.add(ex_session_2)
     db_session.flush()
@@ -213,7 +211,6 @@ def sample_workout_with_exercises(
             weight=15.0 + (i * 2.5),
             reps=12,
             unit=UnitEnum.KG,
-            order=i + 1,
         )
         db_session.add(set_record)
 
