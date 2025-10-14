@@ -11,6 +11,7 @@ class ExerciseSession(Base):
     exercise_id = Column(Integer, ForeignKey("exercises.id"), nullable=False)
     session_id = Column(Integer, ForeignKey("sessions.id"), nullable=True)
     template_id = Column(Integer, ForeignKey("templates.id"), nullable=True)
+    order = Column(Integer, nullable=False, default=1)
 
     exercise = relationship("Exercise", back_populates="exercise_sessions")
     session = relationship("Session", back_populates="exercise_sessions")
