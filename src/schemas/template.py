@@ -12,6 +12,7 @@ class TemplateBase(BaseModel):
     """Base Template schema with common fields."""
 
     name: str = Field(..., min_length=1, max_length=100, description="Template name")
+    description: Optional[str] = Field(None, description="Template description")
     user_id: Optional[int] = Field(
         None, description="ID of the user who owns this template"
     )
@@ -30,6 +31,7 @@ class TemplateUpdate(BaseModel):
     """Schema for updating an existing template."""
 
     name: Optional[str] = Field(None, min_length=1, max_length=100)
+    description: Optional[str] = Field(None)
     user_id: Optional[int] = Field(None)
     exercise_sessions: Optional[List["ExerciseSessionCreate"]] = Field(
         None, description="Updated exercise sessions for this template"

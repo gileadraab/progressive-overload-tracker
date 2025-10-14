@@ -14,6 +14,7 @@ class SessionBase(BaseModel):
     """Base Session schema with common fields."""
 
     date: Optional[datetime] = Field(None, description="Session date and time")
+    notes: Optional[str] = Field(None, description="Workout notes or comments")
     user_id: Optional[int] = Field(
         None, description="ID of the user who owns this session"
     )
@@ -32,6 +33,7 @@ class SessionUpdate(BaseModel):
     """Schema for updating an existing session."""
 
     date: Optional[datetime] = Field(None)
+    notes: Optional[str] = Field(None)
     user_id: Optional[int] = Field(None)
 
 
