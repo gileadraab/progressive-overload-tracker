@@ -79,7 +79,7 @@ def client(db_session) -> Generator[TestClient, None, None]:
 @pytest.fixture
 def sample_user(db_session) -> User:
     """Create a sample user for testing."""
-    user = User(username="testuser", display_name="Test User")
+    user = User(username="testuser", name="Test User")
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
