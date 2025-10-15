@@ -15,5 +15,6 @@ class Set(Base):
     exercise_session_id = Column(
         Integer, ForeignKey("exercise_sessions.id"), nullable=False
     )
+    order = Column(Integer, nullable=True)
 
     exercise_session = relationship("ExerciseSession", back_populates="sets")

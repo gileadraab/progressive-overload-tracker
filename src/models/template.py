@@ -14,5 +14,8 @@ class Template(Base):
 
     user = relationship("User", back_populates="templates")
     exercise_sessions = relationship(
-        "ExerciseSession", back_populates="template", cascade="all, delete-orphan"
+        "ExerciseSession",
+        back_populates="template",
+        cascade="all, delete-orphan",
+        order_by="ExerciseSession.order",
     )

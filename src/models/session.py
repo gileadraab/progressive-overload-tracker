@@ -17,5 +17,8 @@ class Session(Base):
     # Relationships
     user = relationship("User", back_populates="sessions")
     exercise_sessions = relationship(
-        "ExerciseSession", back_populates="session", cascade="all, delete-orphan"
+        "ExerciseSession",
+        back_populates="session",
+        cascade="all, delete-orphan",
+        order_by="ExerciseSession.order",
     )
