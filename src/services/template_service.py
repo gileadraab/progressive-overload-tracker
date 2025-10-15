@@ -120,10 +120,13 @@ def create_template(template_data: TemplateCreate, db: DbSession) -> TemplateMod
     )
 
     # Create exercise sessions for the template
-    for es_data in exercise_sessions_data:
+    for es_index, es_data in enumerate(exercise_sessions_data, start=1):
+        # Assign order based on position if not provided
+        order = es_data.get("order", es_index)
         db_exercise_session = ExerciseSession(
             exercise_id=es_data["exercise_id"],
             template_id=None,  # Will be set when added to template
+            order=order,
         )
         db_template.exercise_sessions.append(db_exercise_session)
 
@@ -178,10 +181,13 @@ def update_template(
         db_template.exercise_sessions = []
 
         # Add new exercise_sessions
-        for es_data in exercise_sessions_data:
+        for es_index, es_data in enumerate(exercise_sessions_data, start=1):
+            # Assign order based on position if not provided
+            order = es_data.get("order", es_index)
             db_exercise_session = ExerciseSession(
                 exercise_id=es_data["exercise_id"],
                 template_id=None,  # Will be set when added to template
+                order=order,
             )
             db_template.exercise_sessions.append(db_exercise_session)
 
@@ -252,6 +258,7 @@ def get_template_as_session(
         "exercise_sessions": [
             {
                 "exercise_id": es.exercise_id,
+                "order": es.order,
                 "sets": [],  # Template has no sets - user fills during workout
             }
             for es in template.exercise_sessions
@@ -314,6 +321,7 @@ def create_template_from_session(
                 exercise_id=es.exercise_id,
                 session_id=None,
                 template_id=None,
+                order=es.order,
                 sets=[],
             )
             for es in session.exercise_sessions
