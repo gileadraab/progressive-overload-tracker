@@ -54,12 +54,25 @@ class ExerciseSessionResponse(ExerciseSessionBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-class ExerciseSessionWithDetails(ExerciseSessionResponse):
-    """Schema for exercise session with full details included."""
+class ExerciseSessionInSession(BaseModel):
+    """Exercise session with details for session context."""
 
-    exercise: Optional["ExerciseResponse"] = None
-    session: Optional["SessionResponse"] = None
-    template: Optional["TemplateResponse"] = None
+    id: int
+    exercise_id: int
+    order: Optional[int] = None
+    exercise: "ExerciseResponse"
+    sets: List["SetResponse"] = Field(default_factory=list)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ExerciseSessionInTemplate(BaseModel):
+    """Exercise session with details for template context."""
+
+    id: int
+    exercise_id: int
+    order: Optional[int] = None
+    exercise: "ExerciseResponse"
     sets: List["SetResponse"] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)

@@ -4,8 +4,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 if TYPE_CHECKING:
     from src.schemas.exercise_session import (ExerciseSessionCreate,
-                                              ExerciseSessionResponse,
-                                              ExerciseSessionWithDetails)
+                                              ExerciseSessionInTemplate,
+                                              ExerciseSessionResponse)
 
 
 class TemplateBase(BaseModel):
@@ -49,7 +49,7 @@ class TemplateResponse(TemplateBase):
 class TemplateWithExerciseSessions(TemplateResponse):
     """Schema for template with exercise sessions included."""
 
-    exercise_sessions: List["ExerciseSessionWithDetails"] = Field(default_factory=list)
+    exercise_sessions: List["ExerciseSessionInTemplate"] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -57,6 +57,6 @@ class TemplateWithExerciseSessions(TemplateResponse):
 # Import for forward reference resolution
 from src.schemas.exercise_session import (  # noqa: E402, F401, F811
     ExerciseSessionCreate,
+    ExerciseSessionInTemplate,
     ExerciseSessionResponse,
-    ExerciseSessionWithDetails,
 )
