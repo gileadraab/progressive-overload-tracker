@@ -5,9 +5,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 if TYPE_CHECKING:
     from src.schemas.exercise_session import (ExerciseSessionCreate,
-                                              ExerciseSessionResponse,
-                                              ExerciseSessionWithDetails)
-    from src.schemas.set import SetResponse
+                                              ExerciseSessionInSession,
+                                              ExerciseSessionResponse)
+
 
 
 class SessionBase(BaseModel):
@@ -72,10 +72,9 @@ class SessionResponse(SessionBase):
 
 
 class SessionWithDetails(SessionResponse):
-    """Schema for session with exercise sessions and sets included."""
+    """Schema for session with exercise sessions included."""
 
-    exercise_sessions: List["ExerciseSessionWithDetails"] = Field(default_factory=list)
-    sets: List["SetResponse"] = Field(default_factory=list)
+    exercise_sessions: List["ExerciseSessionInSession"] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -83,7 +82,6 @@ class SessionWithDetails(SessionResponse):
 # Import for forward reference resolution
 from src.schemas.exercise_session import (  # noqa: E402, F401, F811
     ExerciseSessionCreate,
+    ExerciseSessionInSession,
     ExerciseSessionResponse,
-    ExerciseSessionWithDetails,
 )
-from src.schemas.set import SetResponse  # noqa: E402, F401, F811

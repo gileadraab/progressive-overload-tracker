@@ -5,9 +5,10 @@ from src.schemas.exercise import (ExerciseBase, ExerciseCreate,
 # ExerciseSession schemas
 from src.schemas.exercise_session import (ExerciseSessionBase,
                                           ExerciseSessionCreate,
+                                          ExerciseSessionInSession,
+                                          ExerciseSessionInTemplate,
                                           ExerciseSessionResponse,
-                                          ExerciseSessionUpdate,
-                                          ExerciseSessionWithDetails)
+                                          ExerciseSessionUpdate)
 # Session schemas
 from src.schemas.session import (SessionBase, SessionCreate, SessionResponse,
                                  SessionUpdate, SessionWithDetails)
@@ -51,7 +52,8 @@ __all__ = [
     "ExerciseSessionCreate",
     "ExerciseSessionUpdate",
     "ExerciseSessionResponse",
-    "ExerciseSessionWithDetails",
+    "ExerciseSessionInSession",
+    "ExerciseSessionInTemplate",
     # Exercise schemas
     "ExerciseBase",
     "ExerciseCreate",
@@ -60,9 +62,9 @@ __all__ = [
 ]
 
 # Rebuild models to resolve forward references
-# This must happen after all schemas are imported
 SessionWithDetails.model_rebuild()
 TemplateWithExerciseSessions.model_rebuild()
-ExerciseSessionWithDetails.model_rebuild()
+ExerciseSessionInSession.model_rebuild()
+ExerciseSessionInTemplate.model_rebuild()
 UserWithSessions.model_rebuild()
 SetWithExerciseSession.model_rebuild()
