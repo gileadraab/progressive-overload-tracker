@@ -18,3 +18,8 @@ app.include_router(templates.router)
 @app.get("/")
 async def root():
     return {"message": "Welcome to the Progressive Overload Tracker API"}
+
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy"}
