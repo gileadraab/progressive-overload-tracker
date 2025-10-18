@@ -2,7 +2,7 @@
 name = "progressive-overload-tracker"
 version = "0.1.0"
 description = "A FastAPI-based progressive overload fitness tracking application"
-authors = ["Your Name <your.email@example.com>"]
+authors = "Gilead Raab"
 readme = "README.md"
 packages = [{include = "src"}]
 
