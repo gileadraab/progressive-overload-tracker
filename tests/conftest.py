@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 # Import Base first
 from src.database.database import Base, get_db
+
 # Import app after models
 from src.main import app
 from src.models.enums import CategoryEnum, EquipmentEnum, UnitEnum
@@ -17,6 +18,7 @@ from src.models.exercise_session import ExerciseSession
 from src.models.session import Session as WorkoutSession
 from src.models.set import Set
 from src.models.template import Template
+
 # Import all models to ensure they are registered with Base.metadata
 from src.models.user import User
 

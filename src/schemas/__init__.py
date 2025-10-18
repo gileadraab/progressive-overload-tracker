@@ -1,26 +1,55 @@
 # User schemas
 # Exercise schemas (already exists)
-from src.schemas.exercise import (ExerciseBase, ExerciseCreate,
-                                  ExerciseResponse, ExerciseUpdate)
+from src.schemas.exercise import (
+    ExerciseBase,
+    ExerciseCreate,
+    ExerciseResponse,
+    ExerciseUpdate,
+)
+
 # ExerciseSession schemas
-from src.schemas.exercise_session import (ExerciseSessionBase,
-                                          ExerciseSessionCreate,
-                                          ExerciseSessionInSession,
-                                          ExerciseSessionInTemplate,
-                                          ExerciseSessionResponse,
-                                          ExerciseSessionUpdate)
+from src.schemas.exercise_session import (
+    ExerciseSessionBase,
+    ExerciseSessionCreate,
+    ExerciseSessionInSession,
+    ExerciseSessionInTemplate,
+    ExerciseSessionResponse,
+    ExerciseSessionUpdate,
+)
+
 # Session schemas
-from src.schemas.session import (SessionBase, SessionCreate, SessionResponse,
-                                 SessionUpdate, SessionWithDetails)
+from src.schemas.session import (
+    SessionBase,
+    SessionCreate,
+    SessionResponse,
+    SessionUpdate,
+    SessionWithDetails,
+)
+
 # Set schemas
-from src.schemas.set import (SetBase, SetCreate, SetResponse, SetUpdate,
-                             SetWithExerciseSession)
+from src.schemas.set import (
+    SetBase,
+    SetCreate,
+    SetResponse,
+    SetUpdate,
+    SetWithExerciseSession,
+)
+
 # Template schemas
-from src.schemas.template import (TemplateBase, TemplateCreate,
-                                  TemplateResponse, TemplateUpdate,
-                                  TemplateWithExerciseSessions)
-from src.schemas.user import (UserBase, UserCreate, UserResponse, UserUpdate,
-                              UserWithSessions)
+from src.schemas.template import (
+    TemplateBase,
+    TemplateCreate,
+    TemplateResponse,
+    TemplateUpdate,
+    TemplateWithExerciseSessions,
+)
+from src.schemas.user import (
+    UserBase,
+    UserCreate,
+    UserResponse,
+    UserUpdate,
+    UserWithSessions,
+)
 
 __all__ = [
     # User schemas

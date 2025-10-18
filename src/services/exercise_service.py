@@ -2,7 +2,9 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import HTTPException, status
-from sqlalchemy import String, cast as sql_cast, desc, select
+from sqlalchemy import String
+from sqlalchemy import cast as sql_cast
+from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
 from src.models.enums import CategoryEnum, EquipmentEnum

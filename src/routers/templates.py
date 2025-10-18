@@ -4,8 +4,11 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from src.database.database import get_db
-from src.schemas.template import (TemplateCreate, TemplateUpdate,
-                                  TemplateWithExerciseSessions)
+from src.schemas.template import (
+    TemplateCreate,
+    TemplateUpdate,
+    TemplateWithExerciseSessions,
+)
 from src.services import template_service
 
 router = APIRouter(prefix="/templates", tags=["templates"])

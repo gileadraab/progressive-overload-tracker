@@ -23,7 +23,9 @@ def bench_press(db_session) -> Exercise:
 class TestOrderingFunctionality:
     """Test exercise and set ordering features."""
 
-    def test_create_session_assigns_default_order(self, client: TestClient, sample_user, sample_exercise):
+    def test_create_session_assigns_default_order(
+        self, client: TestClient, sample_user, sample_exercise
+    ):
         """Test that creating a session assigns default order values."""
         session_data = {
             "user_id": sample_user.id,
@@ -53,7 +55,9 @@ class TestOrderingFunctionality:
         assert sets[1]["order"] == 2
         assert sets[2]["order"] == 3
 
-    def test_create_session_with_explicit_order(self, client: TestClient, sample_user, sample_exercise):
+    def test_create_session_with_explicit_order(
+        self, client: TestClient, sample_user, sample_exercise
+    ):
         """Test creating a session with explicitly specified order values."""
         session_data = {
             "user_id": sample_user.id,
@@ -78,7 +82,9 @@ class TestOrderingFunctionality:
         assert data["exercise_sessions"][0]["sets"][0]["order"] == 10
         assert data["exercise_sessions"][0]["sets"][1]["order"] == 20
 
-    def test_reorder_exercises_in_session(self, client: TestClient, sample_user, sample_exercise, bench_press):
+    def test_reorder_exercises_in_session(
+        self, client: TestClient, sample_user, sample_exercise, bench_press
+    ):
         """Test reordering exercises within a session."""
         # Create session with 2 exercises
         session_data = {
@@ -121,7 +127,9 @@ class TestOrderingFunctionality:
         assert data["exercise_sessions"][1]["id"] == es1_id
         assert data["exercise_sessions"][1]["order"] == 2
 
-    def test_reorder_sets_within_exercise(self, client: TestClient, sample_user, sample_exercise):
+    def test_reorder_sets_within_exercise(
+        self, client: TestClient, sample_user, sample_exercise
+    ):
         """Test reordering sets within an exercise session."""
         # Create session with 3 sets
         session_data = {
@@ -309,7 +317,9 @@ class TestOrderingFunctionality:
         # Try to reorder session2 using exercise_session from session1
         reorder_data = {"exercise_sessions": [{"id": es1_id, "order": 1}]}
 
-        response = client.patch(f"/sessions/{session2['id']}/reorder", json=reorder_data)
+        response = client.patch(
+            f"/sessions/{session2['id']}/reorder", json=reorder_data
+        )
         assert response.status_code == 400
         assert "does not belong to session" in response.json()["detail"]
 
@@ -343,7 +353,8 @@ class TestOrderingFunctionality:
 
         # Copy the session
         response = client.get(
-            f"/sessions/from-session/{session['id']}", params={"user_id": sample_user.id}
+            f"/sessions/from-session/{session['id']}",
+            params={"user_id": sample_user.id},
         )
         assert response.status_code == 200
         template = response.json()
@@ -359,7 +370,9 @@ class TestOrderingFunctionality:
         assert template["exercise_sessions"][1]["sets"][0]["order"] == 1
         assert template["exercise_sessions"][1]["sets"][1]["order"] == 2
 
-    def test_template_with_order(self, client: TestClient, sample_user, sample_exercise, bench_press):
+    def test_template_with_order(
+        self, client: TestClient, sample_user, sample_exercise, bench_press
+    ):
         """Test that templates support ordering."""
         # Create template with exercise order
         template_data = {

@@ -33,10 +33,10 @@ def get_templates(
         A list of all templates.
     """
     query = select(TemplateModel).options(
-        joinedload(TemplateModel.exercise_sessions)
-        .joinedload(ExerciseSession.exercise),
-        joinedload(TemplateModel.exercise_sessions)
-        .joinedload(ExerciseSession.sets),
+        joinedload(TemplateModel.exercise_sessions).joinedload(
+            ExerciseSession.exercise
+        ),
+        joinedload(TemplateModel.exercise_sessions).joinedload(ExerciseSession.sets),
         joinedload(TemplateModel.user),
     )
 
@@ -64,10 +64,12 @@ def get_template(template_id: int, db: DbSession) -> TemplateModel:
     result = db.execute(
         select(TemplateModel)
         .options(
-            joinedload(TemplateModel.exercise_sessions)
-            .joinedload(ExerciseSession.exercise),
-            joinedload(TemplateModel.exercise_sessions)
-            .joinedload(ExerciseSession.sets),
+            joinedload(TemplateModel.exercise_sessions).joinedload(
+                ExerciseSession.exercise
+            ),
+            joinedload(TemplateModel.exercise_sessions).joinedload(
+                ExerciseSession.sets
+            ),
             joinedload(TemplateModel.user),
         )
         .where(TemplateModel.id == template_id)

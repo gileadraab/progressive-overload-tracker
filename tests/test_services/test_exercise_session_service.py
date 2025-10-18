@@ -9,8 +9,7 @@ from src.models.exercise_session import ExerciseSession
 from src.models.session import Session as SessionModel
 from src.models.template import Template as TemplateModel
 from src.models.user import User
-from src.schemas.exercise_session import (ExerciseSessionCreate,
-                                          ExerciseSessionUpdate)
+from src.schemas.exercise_session import ExerciseSessionCreate, ExerciseSessionUpdate
 from src.services import exercise_session_service
 
 

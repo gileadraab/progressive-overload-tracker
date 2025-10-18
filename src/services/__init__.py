@@ -1,6 +1,11 @@
-from src.services import (exercise_service, exercise_session_service,
-                          session_service, set_service, template_service,
-                          user_service)
+from src.services import (
+    exercise_service,
+    exercise_session_service,
+    session_service,
+    set_service,
+    template_service,
+    user_service,
+)
 
 __all__ = [
     "exercise_service",

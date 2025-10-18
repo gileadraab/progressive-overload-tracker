@@ -6,8 +6,7 @@ from sqlalchemy.orm import Session as DbSession
 from sqlalchemy.orm import joinedload
 
 from src.models.exercise_session import ExerciseSession
-from src.schemas.exercise_session import (ExerciseSessionCreate,
-                                          ExerciseSessionUpdate)
+from src.schemas.exercise_session import ExerciseSessionCreate, ExerciseSessionUpdate
 
 
 def get_exercise_sessions(
