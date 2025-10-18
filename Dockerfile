@@ -1,21 +1,27 @@
 # Multi-stage build for FastAPI application
-# Stage 1: Builder - Install dependencies
-FROM python:3.11-slim as builder
+# Stage 1: Builder - Install dependencies with Poetry
+FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
-# Install system dependencies required for PostgreSQL
+# Install system dependencies required for PostgreSQL and Poetry
 RUN apt-get update && apt-get install -y \
     gcc \
     postgresql-client \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
-COPY requirements.txt .
+# Install Poetry
+RUN curl -sSL https://install.python-poetry.org | python3 - && \
+    ln -s /root/.local/bin/poetry /usr/local/bin/poetry
 
-# Install Python dependencies
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Copy dependency files first for better caching
+COPY pyproject.toml poetry.lock ./
+
+# Configure Poetry to not create virtual env (we're in a container)
+# and install dependencies only (no dev dependencies)
+RUN poetry config virtualenvs.create false && \
+    poetry install --no-interaction --no-ansi --no-root --only main
 
 # Stage 2: Runtime - Minimal production image
 FROM python:3.11-slim
