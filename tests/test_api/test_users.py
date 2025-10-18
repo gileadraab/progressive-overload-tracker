@@ -1,6 +1,5 @@
 """Integration tests for users API endpoints."""
 
-import pytest
 from fastapi.testclient import TestClient
 
 

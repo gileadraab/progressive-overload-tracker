@@ -4,9 +4,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 if TYPE_CHECKING:
     from src.schemas.exercise import ExerciseResponse
-    from src.schemas.session import SessionResponse
     from src.schemas.set import SetResponse
-    from src.schemas.template import TemplateResponse
 
 
 class ExerciseSessionBase(BaseModel):

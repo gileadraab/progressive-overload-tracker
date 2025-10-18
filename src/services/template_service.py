@@ -320,6 +320,7 @@ def create_template_from_session(
     template_data = TemplateCreate(
         user_id=user_id,
         name=name,
+        description=None,
         exercise_sessions=[
             ExerciseSessionCreate(
                 exercise_id=es.exercise_id,
