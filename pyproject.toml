@@ -2,7 +2,7 @@
 name = "progressive-overload-tracker"
 version = "0.1.0"
 description = "A FastAPI-based progressive overload fitness tracking application"
-authors = "Gilead Raab"
+authors = ["Gilead Raab"]
 readme = "README.md"
 packages = [{include = "src"}]
 
@@ -79,6 +79,10 @@ plugins = ["pydantic.mypy"]
 [[tool.mypy.overrides]]
 module = "sqlalchemy.*"
 ignore_missing_imports = true
+
+[tool.bandit]
+exclude_dirs = ["tests", "migrations"]
+skips = ["B101"]
 
 [build-system]
 requires = ["poetry-core"]

@@ -251,6 +251,7 @@ def get_session_as_template(
     return SessionCreate(
         user_id=user_id,
         date=None,  # Will be set to current time when created
+        notes=None,
         exercise_sessions=exercise_sessions_data,
     )
 
@@ -302,7 +303,7 @@ def reorder_session(
 
         # Update exercise_session order if provided
         if es_update.order is not None:
-            db_es.order = es_update.order
+            setattr(db_es, "order", es_update.order)
 
         # Update set orders if provided
         if es_update.sets:
@@ -321,7 +322,7 @@ def reorder_session(
                         detail=f"Set {set_update.id} does not belong to exercise_session {es_update.id}",
                     )
 
-                db_set.order = set_update.order
+                setattr(db_set, "order", set_update.order)
 
     db.commit()
     return get_session(session_id, db)
