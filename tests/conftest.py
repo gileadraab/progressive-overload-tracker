@@ -1,5 +1,6 @@
 """Pytest configuration and fixtures for testing."""
 
+import os
 from typing import Generator
 
 import pytest
@@ -22,21 +23,30 @@ from src.models.template import Template
 # Import all models to ensure they are registered with Base.metadata
 from src.models.user import User
 
-# Test database URL (SQLite in-memory with shared cache)
-TEST_DATABASE_URL = "sqlite:///:memory:"
+# Test database URL - use environment variable or default to SQLite
+TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "sqlite:///:memory:")
 
 
 @pytest.fixture(scope="function")
 def test_engine():
     """Create a test database engine with pooling to share in-memory database."""
-    from sqlalchemy.pool import StaticPool
+    # Configure engine based on database type
+    if TEST_DATABASE_URL.startswith("sqlite"):
+        from sqlalchemy.pool import StaticPool
 
-    engine = create_engine(
-        TEST_DATABASE_URL,
-        connect_args={"check_same_thread": False},  # Required for SQLite
-        poolclass=StaticPool,  # Share the same connection for in-memory SQLite
-        echo=False,  # Set to True to debug SQL
-    )
+        engine = create_engine(
+            TEST_DATABASE_URL,
+            connect_args={"check_same_thread": False},  # Required for SQLite
+            poolclass=StaticPool,  # Share the same connection for in-memory SQLite
+            echo=False,  # Set to True to debug SQL
+        )
+    else:
+        # PostgreSQL or other database
+        engine = create_engine(
+            TEST_DATABASE_URL,
+            echo=False,  # Set to True to debug SQL
+        )
+
     # Create all tables
     Base.metadata.create_all(bind=engine)
 
