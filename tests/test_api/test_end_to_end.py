@@ -79,7 +79,9 @@ class TestCompleteWorkoutFlow:
         assert history_data["exercise_id"] == exercise_id
         assert history_data["last_performed"] is not None
         assert history_data["last_performed"]["max_weight"] == 100.0
-        assert history_data["last_performed"]["total_volume"] == 2700  # 100*10+100*9+100*8
+        assert (
+            history_data["last_performed"]["total_volume"] == 2700
+        )  # 100*10+100*9+100*8
         assert history_data["personal_best"] is not None
         assert history_data["personal_best"]["weight"] == 100.0
         assert history_data["personal_best"]["reps"] == 10
@@ -119,7 +121,10 @@ class TestCompleteWorkoutFlow:
 
         # Personal best should be updated (higher estimated 1RM)
         assert final_history["personal_best"]["weight"] == 102.5
-        assert final_history["personal_best"]["estimated_1rm"] > history_data["personal_best"]["estimated_1rm"]
+        assert (
+            final_history["personal_best"]["estimated_1rm"]
+            > history_data["personal_best"]["estimated_1rm"]
+        )
 
         # Verify we have 2 sessions in history
         assert len(final_history["recent_sessions"]) == 2
@@ -353,7 +358,9 @@ class TestCompleteWorkoutFlow:
         suggestion = history_after_session2["progression_suggestion"]
         # For bodyweight exercises at 0kg, suggestion should be meaningful
         assert suggestion is not None
-        assert suggestion["recommended_reps"] >= 10 or suggestion["recommended_weight"] > 0
+        assert (
+            suggestion["recommended_reps"] >= 10 or suggestion["recommended_weight"] > 0
+        )
 
         # Session 3: Add weight (weighted pull-ups)
         session3_template = client.get(

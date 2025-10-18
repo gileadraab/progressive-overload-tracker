@@ -5,8 +5,12 @@ from sqlalchemy.orm import Session
 
 from src.database.database import get_db
 from src.models.enums import CategoryEnum, EquipmentEnum
-from src.schemas.exercise import (ExerciseCreate, ExerciseHistory,
-                                  ExerciseResponse, ExerciseUpdate)
+from src.schemas.exercise import (
+    ExerciseCreate,
+    ExerciseHistory,
+    ExerciseResponse,
+    ExerciseUpdate,
+)
 from src.services import exercise_service
 
 router = APIRouter(prefix="/exercises", tags=["exercises"])

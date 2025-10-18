@@ -19,7 +19,9 @@ class ExerciseSessionBase(BaseModel):
     template_id: Optional[int] = Field(
         None, description="ID of the template (if part of a template)"
     )
-    order: Optional[int] = Field(None, description="Display order within session or template")
+    order: Optional[int] = Field(
+        None, description="Display order within session or template"
+    )
 
 
 class ExerciseSessionCreate(BaseModel):
@@ -32,7 +34,9 @@ class ExerciseSessionCreate(BaseModel):
     template_id: Optional[int] = Field(
         None, description="ID of the template (if part of a template)"
     )
-    order: Optional[int] = Field(None, description="Display order within session or template")
+    order: Optional[int] = Field(
+        None, description="Display order within session or template"
+    )
     sets: List["SetCreate"] = Field(
         default_factory=list, description="Sets for this exercise"
     )

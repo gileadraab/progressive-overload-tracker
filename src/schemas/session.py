@@ -4,10 +4,11 @@ from typing import TYPE_CHECKING, List, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 if TYPE_CHECKING:
-    from src.schemas.exercise_session import (ExerciseSessionCreate,
-                                              ExerciseSessionInSession,
-                                              ExerciseSessionResponse)
-
+    from src.schemas.exercise_session import (
+        ExerciseSessionCreate,
+        ExerciseSessionInSession,
+        ExerciseSessionResponse,
+    )
 
 
 class SessionBase(BaseModel):
@@ -48,7 +49,9 @@ class ExerciseSessionOrderUpdate(BaseModel):
     """Schema for updating exercise session order and its sets."""
 
     id: int = Field(..., description="ID of the exercise session to reorder")
-    order: Optional[int] = Field(None, description="New order position for exercise session")
+    order: Optional[int] = Field(
+        None, description="New order position for exercise session"
+    )
     sets: Optional[List[SetOrderUpdate]] = Field(
         None, description="Optional set reordering within this exercise"
     )

@@ -16,7 +16,9 @@ class SetBase(BaseModel):
     )
     reps: int = Field(..., gt=0, description="Number of repetitions")
     unit: UnitEnum = Field(..., description="Unit of measurement (kg or stacks)")
-    order: Optional[int] = Field(None, description="Display order within exercise session")
+    order: Optional[int] = Field(
+        None, description="Display order within exercise session"
+    )
 
 
 class SetCreate(SetBase):

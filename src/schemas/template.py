@@ -3,9 +3,11 @@ from typing import TYPE_CHECKING, List, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 if TYPE_CHECKING:
-    from src.schemas.exercise_session import (ExerciseSessionCreate,
-                                              ExerciseSessionInTemplate,
-                                              ExerciseSessionResponse)
+    from src.schemas.exercise_session import (
+        ExerciseSessionCreate,
+        ExerciseSessionInTemplate,
+        ExerciseSessionResponse,
+    )
 
 
 class TemplateBase(BaseModel):

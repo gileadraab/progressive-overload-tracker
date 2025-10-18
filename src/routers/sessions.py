@@ -4,8 +4,12 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from src.database.database import get_db
-from src.schemas.session import (SessionCreate, SessionReorderRequest,
-                                 SessionUpdate, SessionWithDetails)
+from src.schemas.session import (
+    SessionCreate,
+    SessionReorderRequest,
+    SessionUpdate,
+    SessionWithDetails,
+)
 from src.services import session_service, template_service
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
