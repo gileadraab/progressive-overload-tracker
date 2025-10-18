@@ -43,6 +43,7 @@ def get_templates(
     if user_id:
         query = query.where(TemplateModel.user_id == user_id)
 
+    query = query.order_by(TemplateModel.id)
     result = db.execute(query.offset(skip).limit(limit))
     return list(result.scalars().unique().all())
 
