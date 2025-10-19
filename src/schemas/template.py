@@ -28,6 +28,21 @@ class TemplateCreate(TemplateBase):
         default_factory=list, description="Exercise sessions for this template"
     )
 
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "name": "Push Day",
+                "description": "Chest, shoulders, and triceps workout",
+                "user_id": 1,
+                "exercise_sessions": [
+                    {"exercise_id": 5},  # Bench Press
+                    {"exercise_id": 8},  # Shoulder Press
+                    {"exercise_id": 12},  # Tricep Pushdown
+                ],
+            }
+        }
+    )
+
 
 class TemplateUpdate(BaseModel):
     """Schema for updating an existing template."""

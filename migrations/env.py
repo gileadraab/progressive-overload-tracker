@@ -4,9 +4,18 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from src.config import settings
-from src.models import (Base, CategoryEnum, EquipmentEnum, Exercise,
-                        ExerciseSession, Session, Set, Template, UnitEnum,
-                        User)
+from src.models import (
+    Base,
+    CategoryEnum,
+    EquipmentEnum,
+    Exercise,
+    ExerciseSession,
+    Session,
+    Set,
+    Template,
+    UnitEnum,
+    User,
+)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
