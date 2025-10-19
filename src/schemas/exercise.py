@@ -19,7 +19,17 @@ class ExerciseBase(BaseModel):
 
 
 class ExerciseCreate(ExerciseBase):
-    pass
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "name": "Bench Press",
+                "category": "chest",
+                "subcategory": "Upper Chest",
+                "equipment": "barbell",
+                "image_url": "https://example.com/images/bench_press.jpg",
+            }
+        }
+    )
 
 
 class ExerciseUpdate(BaseModel):

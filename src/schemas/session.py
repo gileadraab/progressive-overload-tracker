@@ -29,6 +29,33 @@ class SessionCreate(SessionBase):
         default_factory=list, description="Exercise sessions in this workout"
     )
 
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "user_id": 1,
+                "date": "2025-10-19T10:30:00",
+                "notes": "Great chest and triceps workout!",
+                "exercise_sessions": [
+                    {
+                        "exercise_id": 5,
+                        "sets": [
+                            {"weight": 100.0, "reps": 10, "unit": "kg"},
+                            {"weight": 100.0, "reps": 8, "unit": "kg"},
+                            {"weight": 100.0, "reps": 6, "unit": "kg"},
+                        ],
+                    },
+                    {
+                        "exercise_id": 12,
+                        "sets": [
+                            {"weight": 30.0, "reps": 12, "unit": "kg"},
+                            {"weight": 30.0, "reps": 10, "unit": "kg"},
+                        ],
+                    },
+                ],
+            }
+        }
+    )
+
 
 class SessionUpdate(BaseModel):
     """Schema for updating an existing session."""

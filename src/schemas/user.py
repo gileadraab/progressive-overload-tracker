@@ -20,7 +20,14 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     """Schema for creating a new user."""
 
-    pass
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "username": "john_doe",
+                "name": "John Doe",
+            }
+        }
+    )
 
 
 class UserUpdate(BaseModel):

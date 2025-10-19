@@ -28,6 +28,17 @@ class SetCreate(SetBase):
         None, description="ID of the exercise session (optional for nested creation)"
     )
 
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "weight": 100.0,
+                "reps": 10,
+                "unit": "kg",
+                "order": 1,
+            }
+        }
+    )
+
 
 class SetUpdate(BaseModel):
     """Schema for updating an existing set."""
