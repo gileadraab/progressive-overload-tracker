@@ -23,6 +23,10 @@ migrations/__pycache__/
 
 *.db
 
+# Logs
+logs/
+*.log
+
 # Local documentation (keep locally only)
 CLAUDE.md
 PROGRESSIVE_OVERLOAD_GUIDE.md
