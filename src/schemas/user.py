@@ -33,8 +33,20 @@ class UserCreate(UserBase):
 class UserUpdate(BaseModel):
     """Schema for updating an existing user."""
 
-    username: Optional[str] = Field(None, min_length=3, max_length=50)
-    name: Optional[str] = Field(None, max_length=100)
+    username: Optional[str] = Field(
+        None, min_length=3, max_length=50, description="Updated username"
+    )
+    name: Optional[str] = Field(
+        None, max_length=100, description="Updated display name"
+    )
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "name": "Johnny Doe",
+            }
+        }
+    )
 
 
 class UserResponse(UserBase):

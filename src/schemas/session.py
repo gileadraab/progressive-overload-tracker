@@ -60,9 +60,17 @@ class SessionCreate(SessionBase):
 class SessionUpdate(BaseModel):
     """Schema for updating an existing session."""
 
-    date: Optional[datetime] = Field(None)
-    notes: Optional[str] = Field(None)
-    user_id: Optional[int] = Field(None)
+    date: Optional[datetime] = Field(None, description="Updated session date/time")
+    notes: Optional[str] = Field(None, description="Updated notes or comments")
+    user_id: Optional[int] = Field(None, description="Updated user ID")
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "notes": "Amazing workout! Hit new PR on bench press!",
+            }
+        }
+    )
 
 
 class SetOrderUpdate(BaseModel):
@@ -89,6 +97,24 @@ class SessionReorderRequest(BaseModel):
 
     exercise_sessions: List[ExerciseSessionOrderUpdate] = Field(
         ..., description="Exercise sessions with new order values"
+    )
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "exercise_sessions": [
+                    {
+                        "id": 10,
+                        "order": 2,
+                        "sets": [
+                            {"id": 25, "order": 1},
+                            {"id": 24, "order": 2},
+                        ],
+                    },
+                    {"id": 9, "order": 1},
+                ]
+            }
+        }
     )
 
 

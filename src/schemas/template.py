@@ -47,11 +47,28 @@ class TemplateCreate(TemplateBase):
 class TemplateUpdate(BaseModel):
     """Schema for updating an existing template."""
 
-    name: Optional[str] = Field(None, min_length=1, max_length=100)
-    description: Optional[str] = Field(None)
-    user_id: Optional[int] = Field(None)
+    name: Optional[str] = Field(
+        None, min_length=1, max_length=100, description="Updated template name"
+    )
+    description: Optional[str] = Field(None, description="Updated description")
+    user_id: Optional[int] = Field(None, description="Updated user ID")
     exercise_sessions: Optional[List["ExerciseSessionCreate"]] = Field(
         None, description="Updated exercise sessions for this template"
+    )
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "name": "Advanced Push Day",
+                "description": "Updated push workout with more volume",
+                "exercise_sessions": [
+                    {"exercise_id": 5},  # Bench Press
+                    {"exercise_id": 8},  # Shoulder Press
+                    {"exercise_id": 12},  # Tricep Pushdown
+                    {"exercise_id": 15},  # Cable Flyes (added)
+                ],
+            }
+        }
     )
 
 
