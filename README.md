@@ -1,272 +1,146 @@
 # Progressive Overload Tracker
 
-A comprehensive fitness tracking application with intelligent workout suggestions and progressive overload tracking.
+A full-stack fitness tracking application with intelligent workout suggestions and progressive overload tracking.
 
-## Features
+## Overview
 
-### Core Functionality
-- **Exercise Management**: Comprehensive exercise database with categories (chest, back, legs, shoulders, arms, core) and equipment types
-- **Workout Sessions**: Track complete workouts with exercises, sets, reps, and weights
-- **Progressive Overload Tracking**: Get intelligent suggestions based on workout history and personal records
-- **Workout Templates**: Create and reuse workout plans
-- **Session Copying**: "Repeat last workout" workflow for easy progression tracking
-- **Exercise History**: View personal records, recent performance, and progression trends
-- **Flexible Ordering**: Organize exercises and sets in your preferred order
+Progressive Overload Tracker helps users systematically improve their strength training by tracking workouts, analyzing performance history, and providing smart recommendations for progressive overload.
 
-### Progressive Overload Features
-The API calculates and provides:
-- Personal best (highest estimated 1RM using Brzycki formula)
-- Last performed workout details
-- Recent session summaries (last 5 workouts)
-- Smart progression suggestions (when to increase weight vs reps)
-- Volume tracking (weight × reps × sets)
+### Key Features
 
-### Performance & Reliability
-- Database connection pooling for concurrent requests
-- GZip compression for efficient data transfer
-- Structured logging for monitoring and debugging
-- Comprehensive error handling
-- 99% test coverage (236 tests)
-
-## Technology Stack
-
-### Backend
-- **Framework**: FastAPI (Python 3.11+)
-- **Database**: PostgreSQL (with SQLite fallback)
-- **ORM**: SQLAlchemy 2.0
-- **Migrations**: Alembic
-- **Testing**: pytest
-- **Code Quality**: black, isort, flake8, mypy, bandit
-
-### Infrastructure
-- **Containerization**: Docker & Docker Compose
-- **CI/CD**: GitHub Actions
+- 📊 **Exercise History & PRs** - Track personal records and performance trends
+- 💡 **Progressive Overload Logic** - Automatic recommendations for weight/rep progression
+- 📝 **Workout Templates** - Create and reuse workout plans
+- 🔄 **Session Copying** - "Repeat last workout" with modifications
+- 📈 **Volume Tracking** - Monitor total work performed over time
+- 🎯 **1RM Calculations** - Brzycki formula for estimated max strength
 
 ## Quick Start
 
-### Using Docker (Recommended)
+### Full Stack (Docker)
 
 ```bash
 # Clone the repository
 git clone https://github.com/gileadraab/progressive-overload-tracker.git
 cd progressive-overload-tracker
 
-# Set up environment variables
+# Set up environment
 cp .env.example .env
-# Edit .env if needed (default values work for Docker)
 
-# Start the services (Docker Compose automatically reads .env)
+# Start all services
 docker-compose up -d
 
-# The API will be available at http://localhost:8000
+# Access the application
+# Backend API: http://localhost:8000
+# API Docs: http://localhost:8000/docs
+# Frontend: http://localhost:3000 (coming soon)
 ```
 
-### Local Development
+### Backend Only
 
 ```bash
+cd backend
+
 # Install dependencies
 poetry install
 
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your local database configuration
+# Set up environment
+cp ../.env.example .env
 
-# Run database migrations
+# Run migrations
 poetry run alembic upgrade head
 
-# Start the development server
+# Start the server
 poetry run uvicorn src.main:app --reload
 
-# The API will be available at http://localhost:8000
+# Backend API: http://localhost:8000
 ```
-
-## API Documentation
-
-Once the server is running, visit:
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-
-## Progressive Overload Workflow
-
-1. **Create or copy a previous workout session**
-   ```bash
-   GET /sessions/from-session/{id}?user_id=1
-   ```
-
-2. **Check exercise history for personal records and suggestions**
-   ```bash
-   GET /exercises/{id}/history?user_id=1
-   ```
-
-3. **Complete workout with adjusted weights/reps**
-   ```bash
-   POST /sessions/
-   ```
-
-4. **Track improvement over time**
-   - View updated personal bests
-   - See progression suggestions
-   - Monitor volume increases
-
-## Development
-
-### Available Commands
-
-```bash
-# Install dependencies
-make install
-
-# Run tests
-make test
-
-# Run tests with coverage
-make test-cov
-
-# Format code
-make format
-
-# Run linting
-make lint
-
-# Type checking
-make type-check
-
-# Run database migrations
-make migrate
-
-# Create new migration
-make migrate-create
-
-# Start Docker services
-make docker-up
-
-# Stop Docker services
-make docker-down
-```
-
-### Running Tests
-
-```bash
-# Run all tests
-poetry run pytest
-
-# Run with coverage
-poetry run pytest --cov=src --cov-report=html
-
-# Run specific test file
-poetry run pytest tests/test_api/test_exercises.py
-
-# Run with verbose output
-poetry run pytest -v
-```
-
-### Code Quality
-
-The project uses pre-commit hooks to ensure code quality:
-
-```bash
-# Install pre-commit hooks
-pre-commit install
-
-# Run hooks manually
-pre-commit run --all-files
-```
-
-Hooks include:
-- black (code formatting)
-- isort (import sorting)
-- flake8 (linting)
-- mypy (type checking)
-- bandit (security checks)
 
 ## Project Structure
 
 ```
 progressive-overload-tracker/
-├── src/
-│   ├── models/          # SQLAlchemy models
-│   ├── schemas/         # Pydantic schemas
-│   ├── routers/         # FastAPI route handlers
-│   ├── services/        # Business logic layer
-│   ├── database/        # Database configuration
-│   ├── logging_config.py
-│   ├── config.py
-│   └── main.py          # Application entry point
-├── tests/
-│   ├── test_api/        # Integration tests
-│   └── test_services/   # Unit tests
-├── migrations/          # Alembic migrations
-├── docs/                # Additional documentation
-├── docker-compose.yml
-├── Dockerfile
-├── pyproject.toml       # Poetry dependencies
-└── Makefile
+├── backend/             # FastAPI backend
+│   ├── src/            # Source code
+│   ├── tests/          # Test suite
+│   ├── docs/           # API & database docs
+│   └── migrations/     # Database migrations
+├── frontend/           # Frontend (coming soon)
+├── docker-compose.yml  # Full stack orchestration
+└── DEVELOPMENT.md      # Development guide
 ```
 
-## API Endpoints
+## Technology Stack
 
-### Exercises
-- `GET /exercises/` - List all exercises (with filtering by category, equipment)
-- `POST /exercises/` - Create exercise
-- `GET /exercises/{id}` - Get exercise details
-- `PUT /exercises/{id}` - Update exercise
-- `DELETE /exercises/{id}` - Delete exercise
-- `GET /exercises/{id}/history` - Get exercise history with PR and suggestions
+### Backend
+- **Framework**: FastAPI (Python 3.11+)
+- **Database**: PostgreSQL 16
+- **ORM**: SQLAlchemy 2.0
+- **Testing**: pytest (236 tests, 99% coverage)
 
-### Sessions
-- `GET /sessions/` - List all sessions (with filtering by user)
-- `POST /sessions/` - Create session with nested exercises and sets
-- `GET /sessions/{id}` - Get session details
-- `PUT /sessions/{id}` - Update session
-- `DELETE /sessions/{id}` - Delete session
-- `GET /sessions/from-session/{id}` - Copy session for progressive overload
-- `GET /sessions/from-template/{id}` - Create session from template
-- `PATCH /sessions/{id}/reorder` - Reorder exercises and sets
+### Frontend (Coming Soon)
+- Framework TBD (React/Vue/Svelte)
+- TypeScript
+- Modern build tooling
 
-### Templates
-- `GET /templates/` - List all templates (with filtering by user)
-- `POST /templates/` - Create template
-- `GET /templates/{id}` - Get template details
-- `PUT /templates/{id}` - Update template with exercises
-- `DELETE /templates/{id}` - Delete template
-- `POST /templates/from-session/{id}` - Create template from session
-
-### Users
-- `GET /users/` - List all users
-- `POST /users/` - Create user
-- `GET /users/{id}` - Get user details
-- `PUT /users/{id}` - Update user
-- `DELETE /users/{id}` - Delete user
-
-## Environment Variables
-
-The `.env` file is used by both local development and Docker Compose. Create it from the example:
-
-```bash
-cp .env.example .env
-```
-
-**For Docker (default values):**
-```env
-DATABASE_URL=postgresql://postgres:postgres@db:5432/progressive_overload
-```
-
-**For Local Development:**
-```env
-DATABASE_URL=postgresql://user:password@localhost:5432/progressive_overload
-```
-
-Docker Compose automatically reads the `.env` file from the project root.
+### Infrastructure
+- Docker & Docker Compose
+- GitHub Actions CI/CD
+- Pre-commit hooks
 
 ## Documentation
 
-- [API Documentation](docs/API.md) - Detailed API endpoint documentation
-- [Database Schema](docs/DATABASE.md) - Database structure and relationships
-- [Development Guide](docs/DEVELOPMENT.md) - Development workflow and best practices
-- [Deployment Guide](docs/DEPLOYMENT.md) - Production deployment instructions
+- [Backend API Documentation](backend/docs/API.md)
+- [Database Schema](backend/docs/DATABASE.md)
+- [Development Guide](DEVELOPMENT.md)
+
+## Development
+
+See [DEVELOPMENT.md](DEVELOPMENT.md) for detailed setup instructions, coding standards, and contribution guidelines.
+
+### Quick Commands
+
+```bash
+# Backend development
+cd backend
+make test          # Run tests
+make format        # Format code
+make lint          # Run linters
+
+# Docker development
+make docker-up     # Start services
+make docker-down   # Stop services
+```
+
+## Progressive Overload Workflow
+
+1. **Start a workout** - Copy your last session or use a template
+2. **Check history** - View PRs and get suggestions for each exercise
+3. **Track your sets** - Log weights and reps as you work out
+4. **Get feedback** - See updated PRs and progression recommendations
+
+## API Overview
+
+### Core Endpoints
+
+- `GET /exercises/{id}/history` - Exercise performance history with suggestions
+- `GET /sessions/from-session/{id}` - Copy previous workout
+- `POST /sessions/` - Create new workout session
+- `GET /templates/` - List workout templates
+
+See [API Documentation](backend/docs/API.md) for complete endpoint details.
+
+## Current Status
+
+- ✅ Backend API complete (99% test coverage)
+- ✅ Docker containerization
+- ✅ CI/CD pipeline
+- ⏳ Frontend in development
+- ⏳ Authentication (planned)
+- ⏳ Mobile app (planned)
 
 ## Acknowledgments
 
 - Built with [FastAPI](https://fastapi.tiangolo.com/)
 - Progressive overload calculations based on the Brzycki formula
-- Inspired by the need for intelligent workout tracking
+- Inspired by the need for data-driven strength training
