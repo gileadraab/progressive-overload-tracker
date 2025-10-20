@@ -1,37 +1,38 @@
 repos:
-  # Python code formatting
+  # Python code formatting (Backend)
   - repo: local
     hooks:
       - id: black
         name: black
-        entry: poetry run black
+        entry: bash -c 'cd backend && poetry run black "${@/#backend\//}"' --
         language: system
         types: [python]
+        files: ^backend/
 
       # Import sorting
       - id: isort
         name: isort
-        entry: poetry run isort
+        entry: bash -c 'cd backend && poetry run isort "${@/#backend\//}"' --
         language: system
         types: [python]
-        args: ["--profile", "black"]
+        files: ^backend/
 
       # Linting
       - id: flake8
         name: flake8
-        entry: poetry run flake8
+        entry: bash -c 'cd backend && poetry run flake8 "${@/#backend\//}"' --
         language: system
         types: [python]
+        files: ^backend/
 
       # Type checking
       - id: mypy
         name: mypy
-        entry: poetry run mypy
+        entry: bash -c 'cd backend && poetry run mypy src/'
         language: system
         types: [python]
-        files: ^src/
+        files: ^backend/src/
         pass_filenames: false
-        args: ["src/"]
 
   # General file fixes
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -52,5 +53,6 @@ repos:
     rev: 1.7.10
     hooks:
       - id: bandit
-        args: ["-c", "pyproject.toml"]
+        args: ["-c", "backend/pyproject.toml"]
         additional_dependencies: ["bandit[toml]"]
+        files: ^backend/

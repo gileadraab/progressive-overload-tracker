@@ -44,17 +44,20 @@ jobs:
       id: cached-poetry-dependencies
       uses: actions/cache@v3
       with:
-        path: .venv
-        key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+        path: backend/.venv
+        key: venv-${{ runner.os }}-${{ hashFiles('backend/poetry.lock') }}
 
     - name: Install dependencies
       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      working-directory: ./backend
       run: poetry install --no-interaction --no-root
 
     - name: Install project
+      working-directory: ./backend
       run: poetry install --no-interaction
 
     - name: Run tests with coverage
+      working-directory: ./backend
       env:
         TEST_DATABASE_URL: postgresql://user:password@localhost:5432/progresstracker_test
       run: poetry run pytest -v --cov=src --cov-report=xml --cov-report=term-missing
@@ -62,7 +65,7 @@ jobs:
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
-        file: ./coverage.xml
+        file: ./backend/coverage.xml
         fail_ci_if_error: false
 
   lint:
@@ -87,24 +90,30 @@ jobs:
       id: cached-poetry-dependencies
       uses: actions/cache@v3
       with:
-        path: .venv
-        key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+        path: backend/.venv
+        key: venv-${{ runner.os }}-${{ hashFiles('backend/poetry.lock') }}
 
     - name: Install dependencies
       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      working-directory: ./backend
       run: poetry install --no-interaction --no-root
 
     - name: Install project
+      working-directory: ./backend
       run: poetry install --no-interaction
 
     - name: Check code formatting with Black
+      working-directory: ./backend
       run: poetry run black --check .
 
     - name: Check import sorting with isort
+      working-directory: ./backend
       run: poetry run isort --check .
 
     - name: Lint with flake8
+      working-directory: ./backend
       run: poetry run flake8 src/ tests/
 
     - name: Type check with mypy
+      working-directory: ./backend
       run: poetry run mypy src/
