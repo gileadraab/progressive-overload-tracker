@@ -1,7 +1,15 @@
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
+from src.logging_config import setup_logging
 from src.routers import exercises, sessions, templates, users
+
+# Configure logging
+setup_logging()
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Progressive Overload Tracker API",
@@ -59,6 +67,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Configure response compression for better performance
+# Compresses responses larger than 1KB with gzip encoding
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Include routers
 app.include_router(exercises.router)
