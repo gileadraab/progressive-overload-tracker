@@ -14,15 +14,153 @@ Complete documentation for the Progressive Overload Tracker API.
 
 ## Authentication
 
-Currently, the API does not implement authentication. This will be added in a future version.
+The API uses JWT (JSON Web Token) authentication. Most endpoints require authentication.
+
+### Public Endpoints (No Authentication Required)
+- `POST /auth/register` - User registration
+- `POST /auth/login` - User login
+- `POST /auth/refresh` - Refresh access token
+- `POST /auth/logout` - Logout
+- `GET /` - Root endpoint
+- `GET /health` - Health check
+- `GET /docs` - Swagger UI
+- `GET /redoc` - ReDoc documentation
+- `GET /exercises/` - List exercises
+- `GET /exercises/{id}` - Get exercise details
+- `POST /exercises/` - Create exercise
+- `PUT /exercises/{id}` - Update exercise
+- `DELETE /exercises/{id}` - Delete exercise
+
+### Protected Endpoints (Authentication Required)
+All other endpoints require a valid JWT access token in the `Authorization` header:
+
+```http
+Authorization: Bearer <access_token>
+```
+
+### Getting Started
+1. Register a new user via `POST /auth/register`
+2. Login via `POST /auth/login` to get access and refresh tokens
+3. Include the access token in the `Authorization` header for all protected endpoints
+4. When the access token expires, use `POST /auth/refresh` with the refresh token to get a new access token
 
 ## Common Response Codes
 
 - `200 OK` - Request successful
 - `201 Created` - Resource created successfully
 - `204 No Content` - Request successful, no content to return
+- `401 Unauthorized` - Missing or invalid authentication token
+- `403 Forbidden` - Valid token but insufficient permissions
 - `404 Not Found` - Resource not found
 - `422 Unprocessable Entity` - Validation error
+
+---
+
+## Authentication Endpoints
+
+### Register User
+
+```http
+POST /auth/register
+```
+
+**Request Body:**
+```json
+{
+  "username": "john_doe",
+  "email": "john@example.com",
+  "name": "John Doe",
+  "password": "securepassword123"
+}
+```
+
+**Response:**
+```json
+{
+  "id": 1,
+  "username": "john_doe",
+  "email": "john@example.com",
+  "name": "John Doe"
+}
+```
+
+**Notes:**
+- Password must be at least 8 characters
+- Username and email must be unique
+- Password is hashed with bcrypt before storage
+
+### Login
+
+```http
+POST /auth/login
+```
+
+**Request Body:**
+```json
+{
+  "email": "john@example.com",
+  "password": "securepassword123"
+}
+```
+
+**Response:**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer"
+}
+```
+
+**Notes:**
+- Access token expires in 30 minutes
+- Refresh token expires in 7 days
+- Use access token for API requests
+- Use refresh token to get new access token
+
+### Refresh Token
+
+```http
+POST /auth/refresh
+```
+
+**Request Body:**
+```json
+{
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Response:**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer"
+}
+```
+
+**Notes:**
+- Returns a new access token
+- Returns the same refresh token
+- Use when access token expires
+
+### Logout
+
+```http
+POST /auth/logout
+```
+
+**Response:**
+```json
+{
+  "message": "Successfully logged out. Please remove tokens from client."
+}
+```
+
+**Notes:**
+- JWT tokens are stateless, so logout is client-side
+- Remove both access and refresh tokens from client storage
 
 ---
 
@@ -103,13 +241,12 @@ DELETE /exercises/{id}
 ### Get Exercise History
 
 ```http
-GET /exercises/{id}/history?user_id={user_id}
+GET /exercises/{id}/history
 ```
 
-**THE CORE FEATURE** - Returns complete performance history and progressive overload suggestions.
+**Authentication:** Required
 
-**Query Parameters:**
-- `user_id` (int, required): User ID to get history for
+**THE CORE FEATURE** - Returns complete performance history and progressive overload suggestions for the authenticated user.
 
 **Response:**
 ```json
@@ -152,16 +289,21 @@ GET /exercises/{id}/history?user_id={user_id}
 
 ## Sessions
 
+**Note:** All session endpoints require authentication. Users can only access their own sessions.
+
 ### List Sessions
 
 ```http
 GET /sessions/
 ```
 
+**Authentication:** Required
+
 **Query Parameters:**
 - `skip` (int, optional): Number of records to skip (default: 0)
 - `limit` (int, optional): Maximum records to return (default: 100, max: 1000)
-- `user_id` (int, optional): Filter sessions by user
+
+**Note:** Sessions are automatically filtered to the authenticated user.
 
 **Response:**
 ```json
@@ -202,13 +344,22 @@ GET /sessions/
 GET /sessions/{id}
 ```
 
+**Authentication:** Required
+
+**Authorization:** Users can only access their own sessions.
+
 **Response:** Same as list item above
+
+**Error Responses:**
+- `403 Forbidden` - Attempting to access another user's session
 
 ### Create Session
 
 ```http
 POST /sessions/
 ```
+
+**Authentication:** Required
 
 **Request Body:**
 ```json
@@ -230,11 +381,18 @@ POST /sessions/
 
 **Response:** Created session with nested details
 
+**Error Responses:**
+- `403 Forbidden` - user_id does not match authenticated user
+
 ### Update Session
 
 ```http
 PUT /sessions/{id}
 ```
+
+**Authentication:** Required
+
+**Authorization:** Users can only update their own sessions.
 
 **Request Body:**
 ```json
@@ -248,13 +406,23 @@ PUT /sessions/{id}
 
 **Response:** Updated session object
 
+**Error Responses:**
+- `403 Forbidden` - Attempting to update another user's session
+
 ### Delete Session
 
 ```http
 DELETE /sessions/{id}
 ```
 
+**Authentication:** Required
+
+**Authorization:** Users can only delete their own sessions.
+
 **Response:** 204 No Content (cascades to exercise_sessions and sets)
+
+**Error Responses:**
+- `403 Forbidden` - Attempting to delete another user's session
 
 ### Copy Session (Progressive Overload Workflow)
 
@@ -262,12 +430,14 @@ DELETE /sessions/{id}
 GET /sessions/from-session/{id}?user_id={user_id}
 ```
 
+**Authentication:** Required
+
 **THE PRIMARY PROGRESSIVE OVERLOAD WORKFLOW** - "Repeat last workout"
 
 Returns a session structure that can be modified and submitted to create a new session.
 
 **Query Parameters:**
-- `user_id` (int, required): User ID for the new session
+- `user_id` (int, required): User ID for the new session (must match authenticated user)
 
 **Response:** SessionCreate format with previous workout data
 
@@ -276,24 +446,36 @@ Returns a session structure that can be modified and submitted to create a new s
 2. Modify weights/reps for progression
 3. Submit to `POST /sessions/` to create new session
 
+**Error Responses:**
+- `403 Forbidden` - user_id does not match authenticated user or session does not belong to user
+
 ### Create Session from Template
 
 ```http
 GET /sessions/from-template/{template_id}?user_id={user_id}
 ```
 
+**Authentication:** Required
+
 Returns a session structure from a template.
 
 **Query Parameters:**
-- `user_id` (int, required): User ID for the new session
+- `user_id` (int, required): User ID for the new session (must match authenticated user)
 
 **Response:** SessionCreate format with template exercises
+
+**Error Responses:**
+- `403 Forbidden` - user_id does not match authenticated user
 
 ### Reorder Session
 
 ```http
 PATCH /sessions/{id}/reorder
 ```
+
+**Authentication:** Required
+
+**Authorization:** Users can only reorder their own sessions.
 
 Reorder exercises and sets within a session.
 
@@ -319,9 +501,14 @@ Reorder exercises and sets within a session.
 
 **Response:** Updated session with new ordering
 
+**Error Responses:**
+- `403 Forbidden` - Attempting to reorder another user's session
+
 ---
 
 ## Templates
+
+**Note:** All template endpoints require authentication. Users can see global templates (is_global=true) plus their own templates. Users cannot modify or delete global templates.
 
 ### List Templates
 
@@ -329,10 +516,13 @@ Reorder exercises and sets within a session.
 GET /templates/
 ```
 
+**Authentication:** Required
+
 **Query Parameters:**
 - `skip` (int, optional): Number of records to skip (default: 0)
 - `limit` (int, optional): Maximum records to return (default: 100, max: 1000)
-- `user_id` (int, optional): Filter templates by user
+
+**Note:** Automatically returns global templates plus templates owned by the authenticated user.
 
 **Response:**
 ```json
@@ -342,6 +532,7 @@ GET /templates/
     "name": "Push Day",
     "description": "Chest, shoulders, and triceps",
     "user_id": 1,
+    "is_global": false,
     "exercise_sessions": [
       {
         "id": 1,
@@ -364,13 +555,22 @@ GET /templates/
 GET /templates/{id}
 ```
 
+**Authentication:** Required
+
+**Authorization:** Users can access global templates or their own templates.
+
 **Response:** Same as list item above
+
+**Error Responses:**
+- `403 Forbidden` - Attempting to access another user's template (non-global)
 
 ### Create Template
 
 ```http
 POST /templates/
 ```
+
+**Authentication:** Required
 
 **Request Body:**
 ```json
@@ -388,11 +588,17 @@ POST /templates/
 
 **Response:** Created template with nested details
 
+**Note:** is_global defaults to false. Only administrators can create global templates.
+
 ### Update Template
 
 ```http
 PUT /templates/{id}
 ```
+
+**Authentication:** Required
+
+**Authorization:** Users can only update their own templates. Global templates cannot be modified.
 
 **Request Body:**
 ```json
@@ -410,13 +616,23 @@ PUT /templates/{id}
 
 **Response:** Updated template object
 
+**Error Responses:**
+- `403 Forbidden` - Attempting to update another user's template or a global template
+
 ### Delete Template
 
 ```http
 DELETE /templates/{id}
 ```
 
+**Authentication:** Required
+
+**Authorization:** Users can only delete their own templates. Global templates cannot be deleted.
+
 **Response:** 204 No Content
+
+**Error Responses:**
+- `403 Forbidden` - Attempting to delete another user's template or a global template
 
 ### Create Template from Session
 
@@ -424,23 +640,32 @@ DELETE /templates/{id}
 POST /templates/from-session/{session_id}?user_id={user_id}&name={name}
 ```
 
+**Authentication:** Required
+
 Create a reusable template from an existing session.
 
 **Query Parameters:**
-- `user_id` (int, required): User ID who owns the template
+- `user_id` (int, required): User ID who owns the template (must match authenticated user)
 - `name` (string, required): Name for the new template
 
 **Response:** Created template object
 
+**Error Responses:**
+- `403 Forbidden` - user_id does not match authenticated user or session does not belong to user
+
 ---
 
 ## Users
+
+**Note:** User registration is handled via `/auth/register`. There is no public user creation endpoint.
 
 ### List Users
 
 ```http
 GET /users/
 ```
+
+**Authentication:** Not required
 
 **Query Parameters:**
 - `skip` (int, optional): Number of records to skip (default: 0)
@@ -463,29 +688,19 @@ GET /users/
 GET /users/{id}
 ```
 
+**Authentication:** Not required
+
 **Response:** Same as list item above
-
-### Create User
-
-```http
-POST /users/
-```
-
-**Request Body:**
-```json
-{
-  "username": "john_doe",
-  "name": "John Doe"
-}
-```
-
-**Response:** Created user object with `id`
 
 ### Update User
 
 ```http
 PUT /users/{id}
 ```
+
+**Authentication:** Required
+
+**Authorization:** Users can only update their own profile.
 
 **Request Body:**
 ```json
@@ -496,13 +711,23 @@ PUT /users/{id}
 
 **Response:** Updated user object
 
+**Error Responses:**
+- `403 Forbidden` - Attempting to update another user's profile
+
 ### Delete User
 
 ```http
 DELETE /users/{id}
 ```
 
+**Authentication:** Required
+
+**Authorization:** Users can only delete their own account.
+
 **Response:** 204 No Content (cascades to sessions)
+
+**Error Responses:**
+- `403 Forbidden` - Attempting to delete another user's account
 
 ---
 

@@ -4,7 +4,9 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from src.database.database import get_db
+from src.dependencies.auth import get_current_user
 from src.models.enums import CategoryEnum, EquipmentEnum
+from src.models.user import User
 from src.schemas.exercise import (
     ExerciseCreate,
     ExerciseHistory,
@@ -97,11 +99,13 @@ def update_exercise(
 @router.get("/{exercise_id}/history", response_model=ExerciseHistory)
 def get_exercise_history(
     exercise_id: int,
-    user_id: int = Query(..., description="User ID to get history for"),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
-    Get historical performance data for an exercise for a specific user.
+    Get historical performance data for an exercise for the authenticated user.
+
+    Requires authentication.
 
     Includes:
     - **last_performed**: Most recent session with this exercise
@@ -109,6 +113,7 @@ def get_exercise_history(
     - **recent_sessions**: Summary of last 5 sessions
     - **progression_suggestion**: Recommended weight/reps for progressive overload
     """
+    user_id: int = int(current_user.id) if current_user.id else 0
     return exercise_service.get_exercise_history(exercise_id, user_id, db)
 
 

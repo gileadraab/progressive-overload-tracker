@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
 from src.logging_config import setup_logging
-from src.routers import exercises, sessions, templates, users
+from src.routers import auth, exercises, sessions, templates, users
 
 # Configure logging
 setup_logging()
@@ -44,6 +44,7 @@ app = FastAPI(
 
     ### API Organization
 
+    * **Authentication**: Register, login, and manage tokens
     * **Exercises**: Manage exercise definitions and view performance history
     * **Sessions**: Create, copy, and manage workout sessions
     * **Templates**: Create reusable workout plans
@@ -73,6 +74,7 @@ app.add_middleware(
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Include routers
+app.include_router(auth.router)
 app.include_router(exercises.router)
 app.include_router(users.router)
 app.include_router(sessions.router)

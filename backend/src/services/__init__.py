@@ -1,4 +1,5 @@
 from src.services import (
+    auth_service,
     exercise_service,
     exercise_session_service,
     session_service,
@@ -8,6 +9,7 @@ from src.services import (
 )
 
 __all__ = [
+    "auth_service",
     "exercise_service",
     "session_service",
     "template_service",

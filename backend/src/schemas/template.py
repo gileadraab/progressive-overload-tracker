@@ -16,7 +16,11 @@ class TemplateBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=100, description="Template name")
     description: Optional[str] = Field(None, description="Template description")
     user_id: Optional[int] = Field(
-        None, description="ID of the user who owns this template"
+        None,
+        description="ID of the user who owns this template (null for global templates)",
+    )
+    is_global: bool = Field(
+        default=False, description="Whether this is a global built-in template"
     )
 
 
