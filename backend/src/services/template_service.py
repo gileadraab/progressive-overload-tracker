@@ -21,16 +21,19 @@ def get_templates(
     user_id: Optional[int] = None,
 ) -> List[TemplateModel]:
     """
-    Get all workout templates from the database with optional filtering.
+    Get workout templates from the database.
+
+    If user_id is provided, returns global templates + user's templates.
+    If user_id is None, returns only global templates.
 
     Args:
         db: The database session.
         skip: Number of records to skip (for pagination).
         limit: Maximum number of records to return.
-        user_id: Optional user_id filter to get templates for a specific user.
+        user_id: Optional user_id to get templates for a specific user (including global).
 
     Returns:
-        A list of all templates.
+        A list of templates (global + user's if user_id provided).
     """
     query = select(TemplateModel).options(
         joinedload(TemplateModel.exercise_sessions).joinedload(
@@ -41,9 +44,16 @@ def get_templates(
     )
 
     if user_id:
-        query = query.where(TemplateModel.user_id == user_id)
+        # Get global templates OR user's templates
+        query = query.where(
+            (TemplateModel.is_global == True)  # noqa: E712
+            | (TemplateModel.user_id == user_id)
+        )
+    else:
+        # Only global templates
+        query = query.where(TemplateModel.is_global == True)  # noqa: E712
 
-    query = query.order_by(TemplateModel.id)
+    query = query.order_by(TemplateModel.is_global.desc(), TemplateModel.id)
     result = db.execute(query.offset(skip).limit(limit))
     return list(result.scalars().unique().all())
 

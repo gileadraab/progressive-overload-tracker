@@ -1,9 +1,11 @@
-from typing import List, Optional
+from typing import List
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from src.database.database import get_db
+from src.dependencies.auth import get_current_user
+from src.models.user import User
 from src.schemas.session import (
     SessionCreate,
     SessionReorderRequest,
@@ -21,16 +23,19 @@ def list_sessions(
     limit: int = Query(
         100, ge=1, le=1000, description="Maximum number of records to return"
     ),
-    user_id: Optional[int] = Query(None, description="Filter by user ID"),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
-    Retrieve a list of workout sessions with their exercises and sets.
+    Retrieve a list of workout sessions for the authenticated user.
+
+    Requires authentication. Returns only sessions belonging to the current user.
 
     - **skip**: Number of records to skip (for pagination)
     - **limit**: Maximum number of records to return
-    - **user_id**: Optional filter to get sessions for a specific user
     """
+    # Only return sessions for the authenticated user
+    user_id: int = int(current_user.id) if current_user.id else 0
     return session_service.get_sessions(db, skip=skip, limit=limit, user_id=user_id)
 
 
@@ -38,13 +43,23 @@ def list_sessions(
 def get_session(
     session_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Retrieve a specific workout session by ID, including exercises and sets.
 
+    Requires authentication. Users can only view their own sessions.
+
     - **session_id**: The ID of the session to retrieve
     """
-    return session_service.get_session(session_id, db)
+    session = session_service.get_session(session_id, db)
+    # Verify session belongs to current user
+    if session.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access this session",
+        )
+    return session
 
 
 @router.post(
@@ -53,11 +68,14 @@ def get_session(
 def create_session(
     session: SessionCreate,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Create a new workout session with nested exercises and sets.
 
-    - **user_id**: ID of the user who owns this session
+    Requires authentication. The session will be created for the authenticated user.
+
+    - **user_id**: Must match the authenticated user's ID
     - **date**: Optional session date and time (defaults to now)
     - **exercise_sessions**: List of exercises in this session, each with:
       - **exercise_id**: ID of the exercise
@@ -66,6 +84,12 @@ def create_session(
         - **reps**: Number of repetitions
         - **unit**: Unit of measurement (kg or stacks)
     """
+    # Verify session is being created for the authenticated user
+    if session.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot create session for another user",
+        )
     return session_service.create_session(session, db)
 
 
@@ -74,25 +98,37 @@ def update_session(
     session_id: int,
     session: SessionUpdate,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Update an existing workout session.
+
+    Requires authentication. Users can only update their own sessions.
 
     - **session_id**: The ID of the session to update
     - All fields are optional; only provided fields will be updated
     - Note: This endpoint updates session metadata only, not nested exercises/sets
     """
+    # Verify session belongs to current user
+    existing_session = session_service.get_session(session_id, db)
+    if existing_session.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to update this session",
+        )
     return session_service.update_session(session_id, session, db)
 
 
 @router.get("/from-template/{template_id}", response_model=SessionCreate)
 def get_session_from_template(
     template_id: int,
-    user_id: int = Query(..., description="User ID for the new session"),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Get a session structure from a template to use as starting point for a new session.
+
+    Requires authentication. Creates session structure for the authenticated user.
 
     This endpoint returns data in SessionCreate format that can be:
     1. Modified by the frontend (add sets, change exercises)
@@ -105,19 +141,21 @@ def get_session_from_template(
     - Frontend submits to POST /sessions/ to save
 
     - **template_id**: The ID of the template to use
-    - **user_id**: The ID of the user for the new session
     """
+    user_id: int = int(current_user.id) if current_user.id else 0
     return template_service.get_template_as_session(template_id, user_id, db)
 
 
 @router.get("/from-session/{session_id}", response_model=SessionCreate)
 def get_session_copy(
     session_id: int,
-    user_id: int = Query(..., description="User ID for the new session"),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Copy a previous session to use as starting point for a new workout.
+
+    Requires authentication. Users can only copy their own sessions.
 
     This is the PRIMARY progressive overload workflow - "repeat last workout".
     Users copy their previous workout, modify weights/reps for progression,
@@ -135,7 +173,7 @@ def get_session_copy(
 
     **Example:**
     ```
-    GET /sessions/from-session/42?user_id=1
+    GET /sessions/from-session/42
     # Returns SessionCreate with previous workout data
     # User increases weights in UI
     POST /sessions/ with modified data
@@ -143,8 +181,15 @@ def get_session_copy(
     ```
 
     - **session_id**: The ID of the session to copy
-    - **user_id**: The ID of the user for the new session
     """
+    # Verify session belongs to current user before copying
+    existing_session = session_service.get_session(session_id, db)
+    if existing_session.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to copy this session",
+        )
+    user_id: int = int(current_user.id) if current_user.id else 0
     return session_service.get_session_as_template(session_id, user_id, db)
 
 
@@ -153,9 +198,12 @@ def reorder_session(
     session_id: int,
     reorder_data: SessionReorderRequest,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Reorder exercise sessions and/or sets within a workout session.
+
+    Requires authentication. Users can only reorder their own sessions.
 
     This endpoint allows users to rearrange the display order of exercises
     and sets via drag-and-drop in the UI. Useful for organizing workout flow.
@@ -188,6 +236,13 @@ def reorder_session(
     - **session_id**: The ID of the session to reorder
     - **exercise_sessions**: List of exercise sessions with new order values
     """
+    # Verify session belongs to current user
+    existing_session = session_service.get_session(session_id, db)
+    if existing_session.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to reorder this session",
+        )
     return session_service.reorder_session(session_id, reorder_data, db)
 
 
@@ -195,12 +250,22 @@ def reorder_session(
 def delete_session(
     session_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Delete a workout session.
 
+    Requires authentication. Users can only delete their own sessions.
+
     - **session_id**: The ID of the session to delete
     - This will cascade delete all associated exercise_sessions and sets
     """
+    # Verify session belongs to current user
+    existing_session = session_service.get_session(session_id, db)
+    if existing_session.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to delete this session",
+        )
     session_service.delete_session(session_id, db)
     return None
