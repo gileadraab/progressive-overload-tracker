@@ -1,3 +1,12 @@
+# Auth schemas
+from src.schemas.auth import (
+    LoginRequest,
+    OAuthLoginRequest,
+    OAuthUserInfo,
+    RefreshTokenRequest,
+    TokenResponse,
+)
+
 # User schemas
 # Exercise schemas (already exists)
 from src.schemas.exercise import (
@@ -52,6 +61,12 @@ from src.schemas.user import (
 )
 
 __all__ = [
+    # Auth schemas
+    "LoginRequest",
+    "TokenResponse",
+    "RefreshTokenRequest",
+    "OAuthLoginRequest",
+    "OAuthUserInfo",
     # User schemas
     "UserBase",
     "UserCreate",
