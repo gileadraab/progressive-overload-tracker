@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from src.database.database import get_db
 from src.dependencies.auth import get_current_user
 from src.models.user import User
-from src.schemas.user import UserCreate, UserResponse, UserUpdate
+from src.schemas.user import UserResponse, UserUpdate
 from src.services import user_service
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -40,20 +40,6 @@ def get_user(
     - **user_id**: The ID of the user to retrieve
     """
     return user_service.get_user(user_id, db)
-
-
-@router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-def create_user(
-    user: UserCreate,
-    db: Session = Depends(get_db),
-):
-    """
-    Create a new user.
-
-    - **username**: Unique username (3-50 characters)
-    - **name**: Optional display name
-    """
-    return user_service.create_user(user, db)
 
 
 @router.put("/{user_id}", response_model=UserResponse)

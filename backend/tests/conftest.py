@@ -90,12 +90,35 @@ def client(db_session) -> Generator[TestClient, None, None]:
 
 @pytest.fixture
 def sample_user(db_session) -> User:
-    """Create a sample user for testing."""
-    user = User(username="testuser", name="Test User")
+    """Create a sample user for testing with password."""
+    from src.services import auth_service
+
+    user = User(
+        username="testuser",
+        email="testuser@example.com",
+        name="Test User",
+        password_hash=auth_service.hash_password("password123"),
+    )
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
     return user
+
+
+@pytest.fixture
+def auth_token(client: TestClient, sample_user: User) -> str:
+    """Get authentication token for sample user."""
+    from src.services import auth_service
+
+    # Create access token for the sample user
+    token = auth_service.create_access_token(data={"sub": sample_user.id})
+    return token
+
+
+@pytest.fixture
+def auth_headers(auth_token: str) -> dict:
+    """Get authorization headers with Bearer token."""
+    return {"Authorization": f"Bearer {auth_token}"}
 
 
 @pytest.fixture
@@ -141,6 +164,7 @@ def sample_template(db_session, sample_user) -> Template:
         user_id=sample_user.id,
         name="Upper Body Day",
         description="Chest and arms workout",
+        is_global=False,
     )
     db_session.add(template)
     db_session.commit()
