@@ -15,6 +15,16 @@ class User(Base):
     # Friendly display name (not unique)
     name = Column(String, nullable=True)
 
+    # Authentication fields
+    email = Column(String, unique=True, index=True, nullable=False)
+    password_hash = Column(String, nullable=True)  # Nullable for OAuth-only users
+
+    # OAuth fields
+    oauth_provider = Column(
+        String, nullable=True
+    )  # null, "google", "facebook", "instagram"
+    oauth_id = Column(String, nullable=True)  # Provider's user ID
+
     # Relationships
     sessions = relationship(
         "Session", back_populates="user", cascade="all, delete-orphan"
