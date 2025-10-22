@@ -110,8 +110,8 @@ def auth_token(client: TestClient, sample_user: User) -> str:
     """Get authentication token for sample user."""
     from src.services import auth_service
 
-    # Create access token for the sample user
-    token = auth_service.create_access_token(data={"sub": sample_user.id})
+    # Create access token for the sample user (subject must be string per JWT spec)
+    token = auth_service.create_access_token(data={"sub": str(sample_user.id)})
     return token
 
 
