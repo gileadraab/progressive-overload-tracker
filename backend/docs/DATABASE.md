@@ -29,13 +29,17 @@ Exercise ─────────────────────┘     
 
 ### User
 
-Stores user account information.
+Stores user account information and authentication credentials.
 
-| Column   | Type         | Constraints                    | Description           |
-|----------|--------------|--------------------------------|-----------------------|
-| id       | Integer      | PRIMARY KEY, AUTO INCREMENT    | Unique identifier     |
-| username | String(50)   | UNIQUE, NOT NULL, INDEX        | Login username        |
-| name     | String(100)  | NULLABLE                       | Display name          |
+| Column         | Type         | Constraints                    | Description                           |
+|----------------|--------------|--------------------------------|---------------------------------------|
+| id             | Integer      | PRIMARY KEY, AUTO INCREMENT    | Unique identifier                     |
+| username       | String(50)   | UNIQUE, NOT NULL, INDEX        | Login username                        |
+| email          | String(255)  | UNIQUE, NOT NULL, INDEX        | User email for authentication         |
+| name           | String(100)  | NULLABLE                       | Display name                          |
+| password_hash  | String(255)  | NULLABLE                       | Bcrypt hashed password                |
+| oauth_provider | String(50)   | NULLABLE                       | OAuth provider (google, facebook, etc)|
+| oauth_id       | String(255)  | NULLABLE                       | OAuth provider user ID                |
 
 **Relationships:**
 - `sessions`: One-to-Many → Session (cascade delete)
@@ -43,6 +47,13 @@ Stores user account information.
 
 **Indexes:**
 - `ix_users_username` on `username`
+- `ix_users_email` on `email`
+
+**Authentication:**
+- Email/password users have `password_hash` set and `oauth_provider` NULL
+- OAuth users have `oauth_provider` and `oauth_id` set, `password_hash` may be NULL
+- Passwords are hashed using bcrypt before storage
+- JWT tokens are used for session management
 
 ---
 
