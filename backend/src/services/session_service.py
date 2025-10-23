@@ -11,7 +11,7 @@ from src.models.session import Session as SessionModel
 from src.models.set import Set as SetModel
 from src.models.user import User
 from src.schemas.exercise_session import ExerciseSessionCreate
-from src.schemas.session import SessionCreate, SessionReorderRequest, SessionUpdate
+from src.schemas.session import SessionCreate, SessionUpdate
 from src.schemas.set import SetCreate
 
 
@@ -254,75 +254,3 @@ def get_session_as_template(
         notes=None,
         exercise_sessions=exercise_sessions_data,
     )
-
-
-def reorder_session(
-    session_id: int, reorder_data: SessionReorderRequest, db: DbSession
-) -> SessionModel:
-    """
-    Reorder exercise sessions and/or sets within a session.
-
-    This allows users to rearrange the order of exercises and sets
-    via drag-and-drop in the frontend.
-
-    Args:
-        session_id: The ID of the session to reorder.
-        reorder_data: The reorder request with new order values.
-        db: The database session.
-
-    Raises:
-        HTTPException: If the session is not found.
-        HTTPException: If any exercise_session or set doesn't belong to this session.
-
-    Returns:
-        The updated session with reordered exercises/sets.
-    """
-    # Verify session exists
-    session = db.get(SessionModel, session_id)
-    if not session:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Session with id {session_id} not found",
-        )
-
-    # Update exercise_session and set orders
-    for es_update in reorder_data.exercise_sessions:
-        db_es = db.get(ExerciseSession, es_update.id)
-        if not db_es:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"ExerciseSession with id {es_update.id} not found",
-            )
-
-        # Verify exercise_session belongs to this session
-        if db_es.session_id != session_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"ExerciseSession {es_update.id} does not belong to session {session_id}",
-            )
-
-        # Update exercise_session order if provided
-        if es_update.order is not None:
-            setattr(db_es, "order", es_update.order)
-
-        # Update set orders if provided
-        if es_update.sets:
-            for set_update in es_update.sets:
-                db_set = db.get(SetModel, set_update.id)
-                if not db_set:
-                    raise HTTPException(
-                        status_code=status.HTTP_404_NOT_FOUND,
-                        detail=f"Set with id {set_update.id} not found",
-                    )
-
-                # Verify set belongs to this exercise_session
-                if db_set.exercise_session_id != es_update.id:
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail=f"Set {set_update.id} does not belong to exercise_session {es_update.id}",
-                    )
-
-                setattr(db_set, "order", set_update.order)
-
-    db.commit()
-    return get_session(session_id, db)

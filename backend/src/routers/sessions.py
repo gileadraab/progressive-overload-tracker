@@ -6,12 +6,7 @@ from sqlalchemy.orm import Session
 from src.database.database import get_db
 from src.dependencies.auth import get_current_user
 from src.models.user import User
-from src.schemas.session import (
-    SessionCreate,
-    SessionReorderRequest,
-    SessionUpdate,
-    SessionWithDetails,
-)
+from src.schemas.session import SessionCreate, SessionUpdate, SessionWithDetails
 from src.services import session_service, template_service
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
@@ -191,59 +186,6 @@ def get_session_copy(
         )
     user_id: int = int(current_user.id) if current_user.id else 0
     return session_service.get_session_as_template(session_id, user_id, db)
-
-
-@router.patch("/{session_id}/reorder", response_model=SessionWithDetails)
-def reorder_session(
-    session_id: int,
-    reorder_data: SessionReorderRequest,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """
-    Reorder exercise sessions and/or sets within a workout session.
-
-    Requires authentication. Users can only reorder their own sessions.
-
-    This endpoint allows users to rearrange the display order of exercises
-    and sets via drag-and-drop in the UI. Useful for organizing workout flow.
-
-    **Use cases:**
-    - Reorder exercises (e.g., move squats before deadlifts)
-    - Reorder sets within an exercise
-    - Both at once
-
-    **Request body example:**
-    ```json
-    {
-      "exercise_sessions": [
-        {
-          "id": 10,
-          "order": 2,
-          "sets": [
-            {"id": 25, "order": 1},
-            {"id": 24, "order": 2}
-          ]
-        },
-        {
-          "id": 9,
-          "order": 1
-        }
-      ]
-    }
-    ```
-
-    - **session_id**: The ID of the session to reorder
-    - **exercise_sessions**: List of exercise sessions with new order values
-    """
-    # Verify session belongs to current user
-    existing_session = session_service.get_session(session_id, db)
-    if existing_session.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to reorder this session",
-        )
-    return session_service.reorder_session(session_id, reorder_data, db)
 
 
 @router.delete("/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
