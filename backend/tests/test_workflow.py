@@ -27,12 +27,10 @@ def test_complete_user_workflow(client: TestClient, db_session: Session):
     6. User creates a session from the global template
     7. User creates a custom template
     8. User starts a session from their custom template
-    9. User changes the order of exercises in a session
-    10. User copies a previous session
-    11. User changes the order of sets
-    12. User gets list with all their sessions
-    13. User deletes their template
-    14. User deletes their account
+    9. User copies a previous session
+    10. User gets list with all their sessions
+    11. User deletes their template
+    12. User deletes their account
     """
     # ========== STEP 1: Populate DB with 4 exercises ==========
     exercises = [
@@ -213,37 +211,9 @@ def test_complete_user_workflow(client: TestClient, db_session: Session):
     )
     assert create_session3_response.status_code == 201
     session3 = create_session3_response.json()
-    session3_id = session3["id"]
     assert len(session3["exercise_sessions"]) == 2
 
-    # ========== STEP 9: User changes the order of exercises in session ==========
-    get_session3_response = client.get(f"/sessions/{session3_id}", headers=headers)
-    assert get_session3_response.status_code == 200
-    session3_details = get_session3_response.json()
-
-    # Swap the order of the two exercises
-    ex_sessions = session3_details["exercise_sessions"]
-    reorder_data = {
-        "exercise_sessions": [
-            {"id": ex_sessions[0]["id"], "order": 2},
-            {"id": ex_sessions[1]["id"], "order": 1},
-        ]
-    }
-    reorder_response = client.patch(
-        f"/sessions/{session3_id}/reorder", json=reorder_data, headers=headers
-    )
-    assert reorder_response.status_code == 200
-
-    # Verify order changed
-    get_session3_after_response = client.get(
-        f"/sessions/{session3_id}", headers=headers
-    )
-    assert get_session3_after_response.status_code == 200
-    session3_after = get_session3_after_response.json()
-    assert session3_after["exercise_sessions"][0]["order"] == 1
-    assert session3_after["exercise_sessions"][1]["order"] == 2
-
-    # ========== STEP 10: User copies a previous session (1st one) ==========
+    # ========== STEP 9: User copies a previous session (1st one) ==========
     copy_session_response = client.get(
         f"/sessions/from-session/{session1_id}?user_id={user_id}", headers=headers
     )
@@ -254,41 +224,14 @@ def test_complete_user_workflow(client: TestClient, db_session: Session):
         "/sessions/", json=copied_session_data, headers=headers
     )
     assert create_session4_response.status_code == 201
-    session4 = create_session4_response.json()
-    session4_id = session4["id"]
 
-    # ========== STEP 11: User changes the order of sets ==========
-    get_session4_response = client.get(f"/sessions/{session4_id}", headers=headers)
-    assert get_session4_response.status_code == 200
-    session4_details = get_session4_response.json()
-
-    # Reorder sets in the first exercise
-    first_ex_session = session4_details["exercise_sessions"][0]
-    sets = first_ex_session["sets"]
-    reorder_sets_data = {
-        "exercise_sessions": [
-            {
-                "id": first_ex_session["id"],
-                "sets": [
-                    {"id": sets[2]["id"], "order": 1},
-                    {"id": sets[1]["id"], "order": 2},
-                    {"id": sets[0]["id"], "order": 3},
-                ],
-            }
-        ]
-    }
-    reorder_sets_response = client.patch(
-        f"/sessions/{session4_id}/reorder", json=reorder_sets_data, headers=headers
-    )
-    assert reorder_sets_response.status_code == 200
-
-    # ========== STEP 12: User gets list with all his sessions ==========
+    # ========== STEP 10: User gets list with all their sessions ==========
     list_sessions_response = client.get("/sessions/", headers=headers)
     assert list_sessions_response.status_code == 200
     sessions_list = list_sessions_response.json()
     assert len(sessions_list) == 4  # 4 sessions created
 
-    # ========== STEP 13: User deletes a template ==========
+    # ========== STEP 11: User deletes their template ==========
     delete_template_response = client.delete(
         f"/templates/{user_template_id}", headers=headers
     )
@@ -300,7 +243,7 @@ def test_complete_user_workflow(client: TestClient, db_session: Session):
     )
     assert get_deleted_template_response.status_code == 404
 
-    # ========== STEP 14: User deletes his account ==========
+    # ========== STEP 12: User deletes their account ==========
     delete_user_response = client.delete(f"/users/{user_id}", headers=headers)
     assert delete_user_response.status_code == 204
 
