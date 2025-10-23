@@ -64,9 +64,9 @@ def login(credentials: LoginRequest, db: Session = Depends(get_db)):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Create tokens with user ID as subject
-    access_token = auth_service.create_access_token(data={"sub": user.id})
-    refresh_token = auth_service.create_refresh_token(data={"sub": user.id})
+    # Create tokens with user ID as subject (must be string per JWT spec)
+    access_token = auth_service.create_access_token(data={"sub": str(user.id)})
+    refresh_token = auth_service.create_refresh_token(data={"sub": str(user.id)})
 
     return TokenResponse(
         access_token=access_token,
@@ -94,16 +94,22 @@ def refresh_token(request: RefreshTokenRequest, db: Session = Depends(get_db)):
     """
     # Verify refresh token
     payload = auth_service.verify_token(request.refresh_token, expected_type="refresh")
-    user_id_raw = payload.get("sub")
+    user_id_str = payload.get("sub")
 
-    # Validate user_id is present and is an integer
-    if user_id_raw is None or not isinstance(user_id_raw, int):
+    # Validate user_id is present and can be converted to integer
+    if user_id_str is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid refresh token",
         )
 
-    user_id: int = user_id_raw
+    try:
+        user_id = int(user_id_str)
+    except (ValueError, TypeError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token",
+        )
 
     # Verify user still exists
     user = db.query(User).filter(User.id == user_id).first()
@@ -113,8 +119,8 @@ def refresh_token(request: RefreshTokenRequest, db: Session = Depends(get_db)):
             detail="User not found",
         )
 
-    # Create new access token
-    access_token = auth_service.create_access_token(data={"sub": user.id})
+    # Create new access token (subject must be string per JWT spec)
+    access_token = auth_service.create_access_token(data={"sub": str(user.id)})
 
     return TokenResponse(
         access_token=access_token,

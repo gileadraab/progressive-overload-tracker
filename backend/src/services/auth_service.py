@@ -209,16 +209,22 @@ def get_user_from_token(token: str, db: Session) -> User:
         User object.
     """
     payload = verify_token(token, expected_type="access")
-    user_id_raw = payload.get("sub")
+    user_id_str = payload.get("sub")
 
-    # Validate user_id is present and is an integer
-    if user_id_raw is None or not isinstance(user_id_raw, int):
+    # Validate user_id is present and can be converted to integer
+    if user_id_str is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
         )
 
-    user_id: int = user_id_raw
+    try:
+        user_id = int(user_id_str)
+    except (ValueError, TypeError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+        )
 
     user = db.query(User).filter(User.id == user_id).first()
     if user is None:
