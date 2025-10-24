@@ -148,21 +148,14 @@ def update_session(
     session_id: int, session_data: SessionUpdate, db: DbSession
 ) -> SessionModel:
     """
-    Update an existing session with full replacement support.
+    Update an existing session with full replacement.
 
-    This function supports two modes:
-    1. Partial update: Only update provided fields (date, notes) without exercise_sessions
-    2. Full replacement: Replace all exercise_sessions and sets when exercise_sessions is provided
-
-    Full replacement workflow:
-    - Validates all exercise_ids exist
-    - Deletes existing exercise_sessions and sets (cascade)
-    - Creates new exercise_sessions and sets from request
-    - Single atomic transaction ensures consistency
+    Deletes all existing exercise_sessions and sets, then recreates them from the request data.
+    All updates happen in a single atomic transaction.
 
     Args:
         session_id: The ID of the session to update.
-        session_data: The session data to update (may include exercise_sessions for full replacement).
+        session_data: The complete session data with exercise_sessions.
         db: The database session.
 
     Raises:
@@ -181,44 +174,42 @@ def update_session(
     update_data = session_data.model_dump(exclude_unset=True)
 
     # Extract exercise_sessions for separate handling
-    exercise_sessions_data = update_data.pop("exercise_sessions", None)
+    exercise_sessions_data = update_data.pop("exercise_sessions")
 
     # Update simple fields (date, notes)
     for field, value in update_data.items():
         setattr(db_session, field, value)
 
-    # Handle full replacement if exercise_sessions provided
-    if exercise_sessions_data is not None:
-        # Validate all exercises exist
-        for es_data in exercise_sessions_data:
-            exercise = db.get(Exercise, es_data["exercise_id"])
-            if not exercise:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Exercise with id {es_data['exercise_id']} not found",
-                )
+    # Validate all exercises exist
+    for es_data in exercise_sessions_data:
+        exercise = db.get(Exercise, es_data["exercise_id"])
+        if not exercise:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Exercise with id {es_data['exercise_id']} not found",
+            )
 
-        # Delete existing exercise_sessions (cascade deletes sets)
-        for es in db_session.exercise_sessions:
-            db.delete(es)
-        db.flush()  # Ensure deletions are processed before additions
+    # Delete existing exercise_sessions (cascade deletes sets)
+    for es in db_session.exercise_sessions:
+        db.delete(es)
+    db.flush()  # Ensure deletions are processed before additions
 
-        # Add new exercise_sessions and sets
-        for es_index, es_data in enumerate(exercise_sessions_data, start=1):
-            sets_data = es_data.pop("sets", [])
+    # Add new exercise_sessions and sets
+    for es_index, es_data in enumerate(exercise_sessions_data, start=1):
+        sets_data = es_data.pop("sets", [])
+        # Assign order based on position if not provided
+        if "order" not in es_data or es_data["order"] is None:
+            es_data["order"] = es_index
+        db_es = ExerciseSession(**es_data)
+
+        for set_index, set_data in enumerate(sets_data, start=1):
             # Assign order based on position if not provided
-            if "order" not in es_data or es_data["order"] is None:
-                es_data["order"] = es_index
-            db_es = ExerciseSession(**es_data)
+            if "order" not in set_data or set_data["order"] is None:
+                set_data["order"] = set_index
+            db_set = SetModel(**set_data)
+            db_es.sets.append(db_set)
 
-            for set_index, set_data in enumerate(sets_data, start=1):
-                # Assign order based on position if not provided
-                if "order" not in set_data or set_data["order"] is None:
-                    set_data["order"] = set_index
-                db_set = SetModel(**set_data)
-                db_es.sets.append(db_set)
-
-            db_session.exercise_sessions.append(db_es)
+        db_session.exercise_sessions.append(db_es)
 
     db.commit()
     db.refresh(db_session)
