@@ -96,13 +96,30 @@ def update_session(
     current_user: User = Depends(get_current_user),
 ):
     """
-    Update an existing workout session.
+    Update an existing workout session with full editing support.
 
     Requires authentication. Users can only update their own sessions.
 
+    This endpoint supports two modes:
+    1. **Partial update**: Update only date/notes (omit exercise_sessions)
+    2. **Full replacement**: Replace all exercises and sets (include exercise_sessions)
+
+    **Workflow for full editing:**
+    - GET /sessions/{id} to fetch current session
+    - Modify the data in your application
+    - PUT /sessions/{id} with the modified data
+    - All existing exercise_sessions and sets are replaced atomically
+
+    **Use cases:**
+    - Fix weight typos (e.g., 1000kg -> 100kg)
+    - Add forgotten exercises
+    - Remove incorrect sets
+    - Correct historical data
+
     - **session_id**: The ID of the session to update
-    - All fields are optional; only provided fields will be updated
-    - Note: This endpoint updates session metadata only, not nested exercises/sets
+    - **date**: Optional updated date/time
+    - **notes**: Optional updated notes
+    - **exercise_sessions**: Optional complete replacement of exercises/sets
     """
     # Verify session belongs to current user
     existing_session = session_service.get_session(session_id, db)
