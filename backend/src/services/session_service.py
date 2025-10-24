@@ -148,18 +148,28 @@ def update_session(
     session_id: int, session_data: SessionUpdate, db: DbSession
 ) -> SessionModel:
     """
-    Update an existing session.
+    Update an existing session with full replacement support.
+
+    This function supports two modes:
+    1. Partial update: Only update provided fields (date, notes) without exercise_sessions
+    2. Full replacement: Replace all exercise_sessions and sets when exercise_sessions is provided
+
+    Full replacement workflow:
+    - Validates all exercise_ids exist
+    - Deletes existing exercise_sessions and sets (cascade)
+    - Creates new exercise_sessions and sets from request
+    - Single atomic transaction ensures consistency
 
     Args:
         session_id: The ID of the session to update.
-        session_data: The session data to update.
+        session_data: The session data to update (may include exercise_sessions for full replacement).
         db: The database session.
 
     Raises:
-        HTTPException: If the session with the given ID is not found.
+        HTTPException: If the session or any exercise_id is not found.
 
     Returns:
-        The updated session.
+        The updated session with all nested relationships.
     """
     db_session = db.get(SessionModel, session_id)
     if not db_session:
@@ -169,8 +179,46 @@ def update_session(
         )
 
     update_data = session_data.model_dump(exclude_unset=True)
+
+    # Extract exercise_sessions for separate handling
+    exercise_sessions_data = update_data.pop("exercise_sessions", None)
+
+    # Update simple fields (date, notes)
     for field, value in update_data.items():
         setattr(db_session, field, value)
+
+    # Handle full replacement if exercise_sessions provided
+    if exercise_sessions_data is not None:
+        # Validate all exercises exist
+        for es_data in exercise_sessions_data:
+            exercise = db.get(Exercise, es_data["exercise_id"])
+            if not exercise:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Exercise with id {es_data['exercise_id']} not found",
+                )
+
+        # Delete existing exercise_sessions (cascade deletes sets)
+        for es in db_session.exercise_sessions:
+            db.delete(es)
+        db.flush()  # Ensure deletions are processed before additions
+
+        # Add new exercise_sessions and sets
+        for es_index, es_data in enumerate(exercise_sessions_data, start=1):
+            sets_data = es_data.pop("sets", [])
+            # Assign order based on position if not provided
+            if "order" not in es_data or es_data["order"] is None:
+                es_data["order"] = es_index
+            db_es = ExerciseSession(**es_data)
+
+            for set_index, set_data in enumerate(sets_data, start=1):
+                # Assign order based on position if not provided
+                if "order" not in set_data or set_data["order"] is None:
+                    set_data["order"] = set_index
+                db_set = SetModel(**set_data)
+                db_es.sets.append(db_set)
+
+            db_session.exercise_sessions.append(db_es)
 
     db.commit()
     db.refresh(db_session)
