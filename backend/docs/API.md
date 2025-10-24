@@ -394,21 +394,7 @@ PUT /sessions/{id}
 
 **Authorization:** Users can only update their own sessions.
 
-This endpoint supports two modes:
-
-#### 1. Partial Update (date/notes only)
-Update only session metadata without modifying exercises/sets.
-
-**Request Body:**
-```json
-{
-  "date": "2025-10-19T14:00:00",
-  "notes": "Updated notes"
-}
-```
-
-#### 2. Full Replacement (complete editing)
-Replace all exercises and sets. Use this to fix typos, add forgotten exercises, or correct historical data.
+**How it works:** Deletes all existing exercises and sets, then recreates them from your request. All changes happen in a single atomic transaction.
 
 **Request Body:**
 ```json
@@ -427,11 +413,10 @@ Replace all exercises and sets. Use this to fix typos, add forgotten exercises, 
 }
 ```
 
-**Workflow for Full Editing:**
+**Workflow:**
 1. GET /sessions/{id} to fetch current session
-2. Modify the data in your application
-3. PUT /sessions/{id} with the modified data
-4. All existing exercise_sessions and sets are replaced atomically
+2. Modify the data (fix typos, add/remove exercises, etc.)
+3. PUT /sessions/{id} with the complete modified session
 
 **Use Cases:**
 - Fix weight typos (e.g., 1000kg → 100kg)
@@ -443,7 +428,8 @@ Replace all exercises and sets. Use this to fix typos, add forgotten exercises, 
 
 **Error Responses:**
 - `403 Forbidden` - Attempting to update another user's session
-- `404 Not Found` - Exercise ID in exercise_sessions does not exist
+- `404 Not Found` - Session or exercise ID not found
+- `422 Unprocessable Entity` - Missing exercise_sessions field
 
 ### Delete Session
 

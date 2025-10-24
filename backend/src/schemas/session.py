@@ -60,21 +60,19 @@ class SessionCreate(SessionBase):
 class SessionUpdate(BaseModel):
     """Schema for updating an existing session with full replacement.
 
-    This allows complete editing of sessions - users can modify exercises, sets,
-    weights, reps, notes, and date. The update is a full replacement: all existing
-    exercise_sessions and sets are deleted and replaced with the provided data.
+    All existing exercise_sessions and sets are deleted and replaced with the provided data.
+    This allows complete editing: fix typos, add/remove exercises, correct historical data.
 
-    This enables workflows like:
-    - Fixing typos in weights (e.g., 1000kg -> 100kg)
-    - Adding forgotten exercises
-    - Removing incorrect sets
-    - Correcting historical data
+    Workflow:
+    1. GET /sessions/{id} to fetch current session
+    2. Modify the data
+    3. PUT /sessions/{id} with the complete modified session
     """
 
     date: Optional[datetime] = Field(None, description="Updated session date/time")
     notes: Optional[str] = Field(None, description="Updated notes or comments")
-    exercise_sessions: Optional[List["ExerciseSessionCreate"]] = Field(
-        None, description="Complete replacement of exercise sessions and sets"
+    exercise_sessions: List["ExerciseSessionCreate"] = Field(
+        ..., description="Complete replacement of exercise sessions and sets"
     )
 
     model_config = ConfigDict(
