@@ -394,6 +394,11 @@ PUT /sessions/{id}
 
 **Authorization:** Users can only update their own sessions.
 
+This endpoint supports two modes:
+
+#### 1. Partial Update (date/notes only)
+Update only session metadata without modifying exercises/sets.
+
 **Request Body:**
 ```json
 {
@@ -402,12 +407,43 @@ PUT /sessions/{id}
 }
 ```
 
-**Note:** This endpoint updates session metadata only, not nested exercises/sets.
+#### 2. Full Replacement (complete editing)
+Replace all exercises and sets. Use this to fix typos, add forgotten exercises, or correct historical data.
 
-**Response:** Updated session object
+**Request Body:**
+```json
+{
+  "date": "2025-10-19T14:00:00",
+  "notes": "Chest day - fixed weight typo",
+  "exercise_sessions": [
+    {
+      "exercise_id": 5,
+      "sets": [
+        {"weight": 100.0, "reps": 10, "unit": "kg"},
+        {"weight": 100.0, "reps": 8, "unit": "kg"}
+      ]
+    }
+  ]
+}
+```
+
+**Workflow for Full Editing:**
+1. GET /sessions/{id} to fetch current session
+2. Modify the data in your application
+3. PUT /sessions/{id} with the modified data
+4. All existing exercise_sessions and sets are replaced atomically
+
+**Use Cases:**
+- Fix weight typos (e.g., 1000kg → 100kg)
+- Add forgotten exercises
+- Remove incorrect sets
+- Correct historical data
+
+**Response:** Updated session object with all nested relationships
 
 **Error Responses:**
 - `403 Forbidden` - Attempting to update another user's session
+- `404 Not Found` - Exercise ID in exercise_sessions does not exist
 
 ### Delete Session
 
@@ -466,43 +502,6 @@ Returns a session structure from a template.
 
 **Error Responses:**
 - `403 Forbidden` - user_id does not match authenticated user
-
-### Reorder Session
-
-```http
-PATCH /sessions/{id}/reorder
-```
-
-**Authentication:** Required
-
-**Authorization:** Users can only reorder their own sessions.
-
-Reorder exercises and sets within a session.
-
-**Request Body:**
-```json
-{
-  "exercise_sessions": [
-    {
-      "id": 10,
-      "order": 2,
-      "sets": [
-        {"id": 25, "order": 1},
-        {"id": 24, "order": 2}
-      ]
-    },
-    {
-      "id": 9,
-      "order": 1
-    }
-  ]
-}
-```
-
-**Response:** Updated session with new ordering
-
-**Error Responses:**
-- `403 Forbidden` - Attempting to reorder another user's session
 
 ---
 

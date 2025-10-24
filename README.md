@@ -12,8 +12,10 @@ Progressive Overload Tracker helps users systematically improve their strength t
 - 💡 **Progressive Overload Logic** - Automatic recommendations for weight/rep progression
 - 📝 **Workout Templates** - Create and reuse workout plans
 - 🔄 **Session Copying** - "Repeat last workout" with modifications
+- ✏️ **Session Editing** - Fix typos, add forgotten exercises, correct historical data
 - 📈 **Volume Tracking** - Monitor total work performed over time
 - 🎯 **1RM Calculations** - Brzycki formula for estimated max strength
+- 🔐 **Authentication** - JWT-based authentication with email/password
 
 ## Quick Start
 
@@ -76,7 +78,7 @@ progressive-overload-tracker/
 - **Framework**: FastAPI (Python 3.11+)
 - **Database**: PostgreSQL 16
 - **ORM**: SQLAlchemy 2.0
-- **Testing**: pytest (236 tests, 99% coverage)
+- **Testing**: pytest (5 comprehensive workflow tests)
 
 ### Frontend (Coming Soon)
 - Framework TBD (React/Vue/Svelte)
@@ -132,10 +134,11 @@ See [API Documentation](backend/docs/API.md) for complete endpoint details.
 
 ## Current Status
 
-- ✅ Backend API complete (99% test coverage)
+- ✅ Backend API complete with comprehensive workflow tests
 - ✅ Docker containerization
 - ✅ CI/CD pipeline
 - ✅ Authentication (JWT-based with email/password)
+- ✅ Session editing for correcting historical data
 - ⏳ Frontend in development
 - ⏳ Mobile app (planned)
 

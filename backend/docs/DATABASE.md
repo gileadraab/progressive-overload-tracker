@@ -107,12 +107,13 @@ Stores workout session data.
 
 Stores reusable workout templates.
 
-| Column      | Type        | Constraints                 | Description               |
-|-------------|-------------|-----------------------------|---------------------------|
-| id          | Integer     | PRIMARY KEY, AUTO INCREMENT | Unique identifier         |
-| name        | String(100) | NOT NULL                    | Template name             |
-| description | Text        | NULLABLE                    | Template description      |
-| user_id     | Integer     | FOREIGN KEY → User, NOT NULL| Owner of this template    |
+| Column      | Type        | Constraints                 | Description                          |
+|-------------|-------------|-----------------------------|--------------------------------------|
+| id          | Integer     | PRIMARY KEY, AUTO INCREMENT | Unique identifier                    |
+| name        | String(100) | NOT NULL                    | Template name                        |
+| description | Text        | NULLABLE                    | Template description                 |
+| user_id     | Integer     | FOREIGN KEY → User, NOT NULL| Owner of this template               |
+| is_global   | Boolean     | NOT NULL, DEFAULT FALSE     | Global/built-in template (read-only) |
 
 **Relationships:**
 - `user`: Many-to-One → User
@@ -124,6 +125,11 @@ Stores reusable workout templates.
 **Cascading:**
 - Deleting a User deletes all their Templates
 - Deleting a Template deletes all its ExerciseSessions
+
+**Global Templates:**
+- Global templates (is_global=true) are visible to all users
+- Users cannot modify or delete global templates
+- Used for built-in workout routines
 
 ---
 
