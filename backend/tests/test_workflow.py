@@ -28,9 +28,10 @@ def test_complete_user_workflow(client: TestClient, db_session: Session):
     7. User creates a custom template
     8. User starts a session from their custom template
     9. User copies a previous session
-    10. User gets list with all their sessions
-    11. User deletes their template
-    12. User deletes their account
+    10. User edits a session to fix a weight typo
+    11. User gets list with all their sessions
+    12. User deletes their template
+    13. User deletes their account
     """
     # ========== STEP 1: Populate DB with 4 exercises ==========
     exercises = [
@@ -224,14 +225,36 @@ def test_complete_user_workflow(client: TestClient, db_session: Session):
         "/sessions/", json=copied_session_data, headers=headers
     )
     assert create_session4_response.status_code == 201
+    session4_id = create_session4_response.json()["id"]
 
-    # ========== STEP 10: User gets list with all their sessions ==========
+    # ========== STEP 10: User edits a session to fix a weight typo ==========
+    # User realizes they entered wrong weight in session 4
+    get_session4_response = client.get(f"/sessions/{session4_id}", headers=headers)
+    assert get_session4_response.status_code == 200
+    session4_to_edit = get_session4_response.json()
+
+    # Fix weight typo: change from 60kg to 65kg on bench press
+    session4_to_edit["exercise_sessions"][0]["sets"][0]["weight"] = 65.0
+    session4_to_edit["notes"] = "First workout session - EDITED: fixed weight typo"
+
+    # Update session
+    update_session4_response = client.put(
+        f"/sessions/{session4_id}", json=session4_to_edit, headers=headers
+    )
+    assert update_session4_response.status_code == 200
+    updated_session4 = update_session4_response.json()
+
+    # Verify the edit was applied
+    assert updated_session4["exercise_sessions"][0]["sets"][0]["weight"] == 65.0
+    assert "EDITED" in updated_session4["notes"]
+
+    # ========== STEP 11: User gets list with all their sessions ==========
     list_sessions_response = client.get("/sessions/", headers=headers)
     assert list_sessions_response.status_code == 200
     sessions_list = list_sessions_response.json()
     assert len(sessions_list) == 4  # 4 sessions created
 
-    # ========== STEP 11: User deletes their template ==========
+    # ========== STEP 12: User deletes their template ==========
     delete_template_response = client.delete(
         f"/templates/{user_template_id}", headers=headers
     )
@@ -243,7 +266,7 @@ def test_complete_user_workflow(client: TestClient, db_session: Session):
     )
     assert get_deleted_template_response.status_code == 404
 
-    # ========== STEP 12: User deletes their account ==========
+    # ========== STEP 13: User deletes their account ==========
     delete_user_response = client.delete(f"/users/{user_id}", headers=headers)
     assert delete_user_response.status_code == 204
 

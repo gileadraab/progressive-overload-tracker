@@ -58,61 +58,45 @@ class SessionCreate(SessionBase):
 
 
 class SessionUpdate(BaseModel):
-    """Schema for updating an existing session."""
+    """Schema for updating an existing session with full replacement.
+
+    This allows complete editing of sessions - users can modify exercises, sets,
+    weights, reps, notes, and date. The update is a full replacement: all existing
+    exercise_sessions and sets are deleted and replaced with the provided data.
+
+    This enables workflows like:
+    - Fixing typos in weights (e.g., 1000kg -> 100kg)
+    - Adding forgotten exercises
+    - Removing incorrect sets
+    - Correcting historical data
+    """
 
     date: Optional[datetime] = Field(None, description="Updated session date/time")
     notes: Optional[str] = Field(None, description="Updated notes or comments")
-    user_id: Optional[int] = Field(None, description="Updated user ID")
+    exercise_sessions: Optional[List["ExerciseSessionCreate"]] = Field(
+        None, description="Complete replacement of exercise sessions and sets"
+    )
 
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
+                "date": "2025-10-19T10:30:00",
                 "notes": "Amazing workout! Hit new PR on bench press!",
-            }
-        }
-    )
-
-
-class SetOrderUpdate(BaseModel):
-    """Schema for updating a set's order."""
-
-    id: int = Field(..., description="ID of the set to reorder")
-    order: int = Field(..., description="New order position")
-
-
-class ExerciseSessionOrderUpdate(BaseModel):
-    """Schema for updating exercise session order and its sets."""
-
-    id: int = Field(..., description="ID of the exercise session to reorder")
-    order: Optional[int] = Field(
-        None, description="New order position for exercise session"
-    )
-    sets: Optional[List[SetOrderUpdate]] = Field(
-        None, description="Optional set reordering within this exercise"
-    )
-
-
-class SessionReorderRequest(BaseModel):
-    """Schema for reordering exercise sessions and sets within a session."""
-
-    exercise_sessions: List[ExerciseSessionOrderUpdate] = Field(
-        ..., description="Exercise sessions with new order values"
-    )
-
-    model_config = ConfigDict(
-        json_schema_extra={
-            "example": {
                 "exercise_sessions": [
                     {
-                        "id": 10,
-                        "order": 2,
+                        "exercise_id": 5,
                         "sets": [
-                            {"id": 25, "order": 1},
-                            {"id": 24, "order": 2},
+                            {"weight": 100.0, "reps": 10, "unit": "kg"},
+                            {"weight": 100.0, "reps": 8, "unit": "kg"},
                         ],
                     },
-                    {"id": 9, "order": 1},
-                ]
+                    {
+                        "exercise_id": 12,
+                        "sets": [
+                            {"weight": 30.0, "reps": 12, "unit": "kg"},
+                        ],
+                    },
+                ],
             }
         }
     )
